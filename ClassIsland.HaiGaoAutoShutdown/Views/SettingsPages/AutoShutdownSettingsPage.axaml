@@ -1,0 +1,89 @@
+<ci:SettingsPageBase x:Class="ClassIsland.HaiGaoAutoShutdown.Views.SettingsPages.AutoShutdownSettingsPage"
+                     xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                     mc:Ignorable="d">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="16" MaxWidth="960" Margin="0 0 24 0">
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+          <StackPanel Spacing="6">
+            <TextBlock Text="海高定时关机" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="每天在指定时间显示覆盖所有屏幕的可取消倒计时。"
+                       TextWrapping="Wrap"
+                       Opacity="0.72" />
+          </StackPanel>
+          <ToggleSwitch Grid.Column="1"
+                        IsChecked="{Binding Settings.IsEnabled, Mode=TwoWay}"
+                        OnContent="已启用"
+                        OffContent="已暂停"
+                        VerticalAlignment="Center" />
+        </Grid>
+      </Border>
+
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel Spacing="16">
+          <TextBlock Text="每日计划" FontSize="18" FontWeight="SemiBold" />
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+            <StackPanel Spacing="6">
+              <TextBlock Text="关机时间" FontWeight="SemiBold" />
+              <TimePicker SelectedTime="{Binding Settings.ShutdownTime, Mode=TwoWay}"
+                          Width="170"
+                          HorizontalAlignment="Left" />
+              <TextBlock Text="晚于此时间启动、从睡眠恢复或错过计划时，不会补触发。"
+                         TextWrapping="Wrap"
+                         Opacity="0.68" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6">
+              <TextBlock Text="倒计时秒数" FontWeight="SemiBold" />
+              <NumericUpDown Minimum="1"
+                             Maximum="3600"
+                             Increment="1"
+                             Value="{Binding Settings.CountdownSeconds, Mode=TwoWay}"
+                             Width="170"
+                             HorizontalAlignment="Left" />
+              <TextBlock Text="可设置 1–3600 秒；倒计时期间点击任意屏幕即可取消。"
+                         TextWrapping="Wrap"
+                         Opacity="0.68" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+          <StackPanel Spacing="7">
+            <TextBlock Text="运行状态" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Settings.NextOccurrenceText}"
+                       FontSize="16"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Settings.RuntimeStatus}"
+                       TextWrapping="Wrap"
+                       Opacity="0.72" />
+          </StackPanel>
+          <Button x:Name="PreviewButton"
+                  Grid.Column="1"
+                  Content="安全预览倒计时"
+                  Click="Preview_OnClick"
+                  VerticalAlignment="Center" />
+        </Grid>
+      </Border>
+
+      <Border Padding="16"
+              CornerRadius="8"
+              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+        <TextBlock Text="倒计时结束后执行 Windows 正常关机，不会强制关闭含有未保存内容的程序。锁屏时计划仍会执行，但锁屏界面上看不到提示，也无法点击取消。"
+                   TextWrapping="Wrap"
+                   Opacity="0.76" />
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</ci:SettingsPageBase>

@@ -1,0 +1,48 @@
+<Window x:Class="ClassIsland.HaiGaoAutoShutdown.Views.ShutdownCountdownWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1280"
+        d:DesignHeight="720"
+        Title="定时关机倒计时"
+        Topmost="True"
+        ShowInTaskbar="False"
+        CanResize="False"
+        SystemDecorations="None"
+        WindowStartupLocation="Manual"
+        Background="#E0000000">
+  <Grid Background="#E0000000">
+    <StackPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                MaxWidth="1000"
+                Margin="48"
+                Spacing="20">
+      <Border x:Name="PreviewBadge"
+              HorizontalAlignment="Center"
+              Padding="14 6"
+              CornerRadius="18"
+              Background="#2D8CFF"
+              IsVisible="False">
+        <TextBlock Text="安全预览 · 不会执行关机"
+                   Foreground="White"
+                   FontSize="18"
+                   FontWeight="SemiBold" />
+      </Border>
+      <TextBlock x:Name="MessageText"
+                 Text="将在 60 秒关机，点击屏幕任意处取消"
+                 Foreground="White"
+                 FontSize="46"
+                 FontWeight="SemiBold"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap" />
+      <TextBlock x:Name="HintText"
+                 Text="点击屏幕任意处，或按 Esc，取消本次关机"
+                 Foreground="#CCFFFFFF"
+                 FontSize="24"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,19 @@
+<controls:ComponentBase x:Class="ClassIsland.HaiGaoDuty.Controls.Components.DutyRosterComponent"
+                        xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        xmlns:controls="clr-namespace:ClassIsland.Core.Abstractions.Controls;assembly=ClassIsland.Core"
+                        mc:Ignorable="d"
+                        d:DesignWidth="360"
+                        d:DesignHeight="48">
+  <StackPanel Orientation="Horizontal"
+              Spacing="7"
+              VerticalAlignment="Center">
+    <TextBlock Text="值日生"
+               Opacity="0.72" />
+    <TextBlock Text="{Binding TodayDisplay}"
+               FontWeight="SemiBold"
+               TextTrimming="CharacterEllipsis" />
+  </StackPanel>
+</controls:ComponentBase>

@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Configurations>Debug;Release;Debug_MSIX;Release_MSIX</Configurations>
+    <CreateCipx>true</CreateCipx>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ClassIslandPluginSdkVersion>2.0.0.*</ClassIslandPluginSdkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ClassIsland.PluginSdk" Version="$(ClassIslandPluginSdkVersion)">
+      <ExcludeAssets>runtime; native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="manifest.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    <None Update="README.md"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    <None Update="icon.png"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\ClassIsland.HaiGaoAutoShutdown\Models\*.cs"
+             Link="AutoShutdown\Models\%(Filename)%(Extension)" />
+    <Compile Include="..\ClassIsland.HaiGaoAutoShutdown\Services\*.cs"
+             Link="AutoShutdown\Services\%(Filename)%(Extension)" />
+    <Compile Include="..\ClassIsland.HaiGaoAutoShutdown\Views\ShutdownCountdownWindow.axaml.cs"
+             Link="AutoShutdown\Views\ShutdownCountdownWindow.axaml.cs" />
+    <AvaloniaXaml Include="..\ClassIsland.HaiGaoAutoShutdown\Views\ShutdownCountdownWindow.axaml"
+                  Link="AutoShutdown\Views\ShutdownCountdownWindow.axaml" />
+    <Compile Include="..\ClassIsland.HaiGaoDuty\Models\*.cs"
+             Link="DutyRoster\Models\%(Filename)%(Extension)" />
+    <Compile Include="..\ClassIsland.HaiGaoDuty\Services\*.cs"
+             Link="DutyRoster\Services\%(Filename)%(Extension)" />
+    <Compile Include="..\ClassIsland.HaiGaoDuty\Properties\AssemblyInfo.cs"
+             Link="DutyRoster\Properties\AssemblyInfo.cs" />
+    <Compile Include="..\ClassIsland.HaiGaoDuty\Controls\Components\DutyRosterComponent.axaml.cs"
+             Link="DutyRoster\Controls\Components\DutyRosterComponent.axaml.cs" />
+    <AvaloniaXaml Include="..\ClassIsland.HaiGaoDuty\Controls\Components\DutyRosterComponent.axaml"
+                  Link="DutyRoster\Controls\Components\DutyRosterComponent.axaml" />
+    <Compile Include="..\ClassIsland.HaiGaoDuty\Views\SettingsPages\DutyRosterSettingsPage.axaml.cs"
+             Link="DutyRoster\Views\SettingsPages\DutyRosterSettingsPage.axaml.cs" />
+    <AvaloniaXaml Include="..\ClassIsland.HaiGaoDuty\Views\SettingsPages\DutyRosterSettingsPage.axaml"
+                  Link="DutyRoster\Views\SettingsPages\DutyRosterSettingsPage.axaml" />
+  </ItemGroup>
+  <Target Name="UseWindowsPowerShellForCipxChecksum"
+          BeforeTargets="CreateCipx"
+          Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <PowershellBinaryName>powershell</PowershellBinaryName>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Configurations>Debug;Release;Debug_MSIX;Release_MSIX</Configurations>
+    <CreateCipx>false</CreateCipx>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ClassIslandPluginSdkVersion>2.0.0.*</ClassIslandPluginSdkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ClassIsland.PluginSdk" Version="$(ClassIslandPluginSdkVersion)">
+      <ExcludeAssets>runtime; native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassIsland.HaiGao104\ClassIsland.HaiGao104.csproj"
+                      Private="false"
+                      AdditionalProperties="CreateCipx=false" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="manifest.yml"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    <None Update="README.md"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    <None Update="icon.png"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+  </ItemGroup>
+  <Target Name="UseWindowsPowerShellForCipxChecksum"
+          BeforeTargets="CreateCipx"
+          Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <PowershellBinaryName>powershell</PowershellBinaryName>
+    </PropertyGroup>
+  </Target>
+</Project>

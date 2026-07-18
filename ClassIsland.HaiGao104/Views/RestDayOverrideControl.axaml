@@ -1,0 +1,30 @@
+<UserControl x:Class="ClassIsland.HaiGao104.Views.RestDayOverrideControl"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <StackPanel Spacing="8">
+    <Separator Margin="0 16 0 4" />
+    <TextBlock Text="海亮教育+休息日处理" FontWeight="SemiBold" />
+    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Opacity="0.75" />
+
+    <StackPanel IsVisible="{Binding ShowRestActions}" Spacing="6">
+      <TextBlock Text="重复课表的开头" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <NumericUpDown Minimum="1"
+                       Maximum="{Binding MaximumDay}"
+                       Value="{Binding RepeatStartDay, Mode=TwoWay}"
+                       Width="110" />
+        <TextBlock Text="{Binding RepeatStartDayName}"
+                   VerticalAlignment="Center"
+                   FontWeight="SemiBold" />
+      </StackPanel>
+      <TextBlock Text="从今天连续使用所选周次，直到本轮连续休息结束；超过最后一周后回到周一。"
+                 TextWrapping="Wrap" Opacity="0.75" />
+      <Button Content="{Binding RepeatButtonText}"
+              Click="StartRepeat_OnClick"
+              HorizontalAlignment="Stretch" />
+      <Button Content="忽略，保持今天是休息日"
+              Click="IgnoreRestDay_OnClick"
+              HorizontalAlignment="Stretch" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

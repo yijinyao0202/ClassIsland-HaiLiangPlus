@@ -1,0 +1,195 @@
+<ci:SettingsPageBase x:Class="ClassIsland.HaiGaoDuty.Views.SettingsPages.DutyRosterSettingsPage"
+                     xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                     mc:Ignorable="d"
+                     d:DesignWidth="960"
+                     d:DesignHeight="900">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="16"
+                MaxWidth="960"
+                Margin="0 0 24 0">
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="24">
+          <StackPanel Spacing="5">
+            <TextBlock Text="适用于海亮教育"
+                       FontSize="13"
+                       Opacity="0.68" />
+            <TextBlock Text="大周值日生"
+                       FontSize="22"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="跟随大周上课日自动轮换；每轮每位同学只出现一次，休息日不会消耗名单。"
+                       TextWrapping="Wrap"
+                       Opacity="0.72" />
+          </StackPanel>
+          <StackPanel Grid.Column="1"
+                      Spacing="4"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center">
+            <TextBlock Text="值日生轮换"
+                       HorizontalAlignment="Right"
+                       Opacity="0.72" />
+            <ToggleSwitch IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                          OnContent="已开启"
+                          OffContent="已暂停" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel Spacing="16">
+          <StackPanel Spacing="4">
+            <TextBlock Text="名单与轮换"
+                       FontSize="18"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="每行填写一人，也可导入 Excel 或纯文本；系统会自动寻找最可能的姓名列。"
+                       TextWrapping="Wrap"
+                       Opacity="0.72" />
+          </StackPanel>
+
+          <TextBox Text="{Binding RosterDraft, Mode=TwoWay}"
+                   AcceptsReturn="True"
+                   TextWrapping="Wrap"
+                   MinHeight="170"
+                   HorizontalAlignment="Stretch"
+                   VerticalContentAlignment="Top"
+                   Watermark="每行一个姓名，例如：&#x0a;张三&#x0a;李四" />
+
+          <Border Padding="14"
+                  CornerRadius="7"
+                  Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid ColumnDefinitions="*,Auto"
+                  ColumnSpacing="20">
+              <StackPanel Spacing="3"
+                          VerticalAlignment="Center">
+                <TextBlock Text="每天值日人数"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="不能超过有效名单人数；人数调整从下一个上课日完整生效。"
+                           TextWrapping="Wrap"
+                           Opacity="0.68" />
+              </StackPanel>
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding DailyCountDraft, Mode=TwoWay}"
+                             Minimum="1"
+                             Maximum="100"
+                             FormatString="0"
+                             Width="140"
+                             VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <TextBlock Text="{Binding ValidationMessage}"
+                     TextWrapping="Wrap"
+                     Opacity="0.82" />
+
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                ColumnSpacing="8">
+            <Button Content="导入 Excel / 文本"
+                    Click="ImportRoster_OnClick" />
+            <Button Grid.Column="2"
+                    Content="取消待生效配置"
+                    Click="CancelPendingConfiguration_OnClick" />
+            <Button Grid.Column="3"
+                    Content="应用名单与人数"
+                    Classes="accent"
+                    Click="ApplyDraft_OnClick" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel Spacing="16">
+          <StackPanel Spacing="4">
+            <TextBlock Text="每日提醒"
+                       FontSize="18"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="晚于提醒时间启动会补发当天提醒，不会补发历史日期。"
+                       TextWrapping="Wrap"
+                       Opacity="0.72" />
+          </StackPanel>
+          <Grid ColumnDefinitions="*,*"
+                ColumnSpacing="24">
+            <StackPanel Spacing="6">
+              <TextBlock Text="提醒时间"
+                         FontWeight="SemiBold" />
+              <TimePicker SelectedTime="{Binding ReminderTime, Mode=TwoWay}"
+                          Width="160"
+                          HorizontalAlignment="Left" />
+            </StackPanel>
+            <StackPanel Grid.Column="1"
+                        Spacing="6">
+              <TextBlock Text="语音播报"
+                         FontWeight="SemiBold" />
+              <ToggleSwitch IsChecked="{Binding IsSpeechEnabled, Mode=TwoWay}"
+                            OnContent="已开启"
+                            OffContent="已关闭"
+                            HorizontalAlignment="Left" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="运行状态"
+                 FontSize="18"
+                 FontWeight="SemiBold" />
+
+      <Border Padding="20"
+              CornerRadius="10"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel Spacing="5">
+          <TextBlock Text="今日安排"
+                     Opacity="0.68" />
+          <TextBlock Text="{Binding TodayDisplay}"
+                     FontSize="22"
+                     FontWeight="SemiBold"
+                     TextWrapping="Wrap" />
+          <TextBlock Text="{Binding TodayStatus}"
+                     TextWrapping="Wrap"
+                     Opacity="0.72" />
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,*"
+            ColumnSpacing="16">
+        <Border Padding="18"
+                CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="6">
+            <TextBlock Text="本轮进度"
+                       FontSize="16"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{Binding CycleProgress}"
+                       TextWrapping="Wrap"
+                       Opacity="0.82" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1"
+                Padding="18"
+                CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="6">
+            <TextBlock Text="配置状态"
+                       FontSize="16"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{Binding PendingStatus}"
+                       TextWrapping="Wrap"
+                       Opacity="0.82" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <TextBlock Text="值日生已集成进海亮教育+；暂停课表完全接管时不会推进或提醒，恢复后也不会补排暂停日期。"
+                 TextWrapping="Wrap"
+                 Opacity="0.62" />
+    </StackPanel>
+  </ScrollViewer>
+</ci:SettingsPageBase>

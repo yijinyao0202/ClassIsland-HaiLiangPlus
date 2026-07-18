@@ -1,0 +1,263 @@
+<ci:SettingsPageBase x:Class="ClassIsland.HaiGao104.Views.SettingsPages.HaiGao104SettingsPage"
+                     xmlns="https://github.com/avaloniaui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:ci="http://classisland.tech/schemas/xaml/core"
+                     xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                     mc:Ignorable="d">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="16" MaxWidth="960" Margin="0 0 24 0">
+      <Border Padding="20" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+          <StackPanel Spacing="6">
+            <TextBlock Text="海亮教育+" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="管理长周期课程，并按班级批次自动加载不同的时间表。"
+                       TextWrapping="Wrap" Opacity="0.72" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right">
+            <TextBlock Text="完全接管" HorizontalAlignment="Right" Opacity="0.72" />
+            <ToggleSwitch IsChecked="{Binding Settings.IsEnabled, Mode=TwoWay}"
+                          OnContent="已启用" OffContent="已暂停" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
+                        Title="警告：海亮教育+会覆盖 ClassIsland 原软件课表"
+                        Message="启用完全接管后，每天使用哪份课表将以海亮教育+的多周周期为准。原有课表内容不会被删除；暂停海亮教育+会恢复接管前的课表状态。">
+        <controls:InfoBar.ActionButton>
+          <Button Content="查看新手引导" Click="ShowOnboarding_OnClick" />
+        </controls:InfoBar.ActionButton>
+      </controls:InfoBar>
+
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Border Padding="18" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="当前周期" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Settings.TodayStatus}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Settings.NextSwitchText}" Opacity="0.72" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Padding="18" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="10">
+            <TextBlock Text="课表管理" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="在原课表编辑器里新增周次、前后插入、归档恢复，并分别填写每一天的课程。"
+                       TextWrapping="Wrap" Opacity="0.72" />
+            <Button Content="管理周次和课程" Click="OpenProfileEditor_OnClick" HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Padding="20" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+        <StackPanel Spacing="16">
+          <StackPanel Spacing="4">
+            <TextBlock Text="周期设置" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="上课天数由课表编辑器中的周次数决定；休息天数可直接调整。"
+                       TextWrapping="Wrap" Opacity="0.72" />
+          </StackPanel>
+
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+            <StackPanel Spacing="6">
+              <TextBlock Text="连续上课" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Settings.WorkDays, StringFormat={}当前 {0} 天}" FontSize="20" />
+              <TextBlock Text="需要增减时，请打开“管理周次和课程”。" Opacity="0.68" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6">
+              <TextBlock Text="连续休息" FontWeight="SemiBold" />
+              <NumericUpDown Minimum="1" Maximum="100"
+                             Value="{Binding Settings.RestDays, Mode=TwoWay}" Width="160" />
+              <TextBlock Text="原定休息日会询问是否临时重复课表。" Opacity="0.68" TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+
+          <Border Padding="12" CornerRadius="7" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+              <StackPanel Spacing="3">
+                <TextBlock Text="今天是周几？" FontWeight="SemiBold" />
+                <TextBlock Text="通常直接在课表编辑器顶部设置；设置后会自动连续推算。" Opacity="0.72" TextWrapping="Wrap" />
+              </StackPanel>
+              <Button Grid.Column="1" Content="打开课表编辑器" Click="OpenProfileEditor_OnClick" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <Expander>
+            <Expander.Header>
+              <TextBlock Text="高级：校准整个周期位置（含休息日）" />
+            </Expander.Header>
+            <StackPanel Margin="0 12 0 0" Spacing="8">
+              <TextBlock Text="只在需要把今天定位到休息日时使用。永久校准会结束正在执行的临时休息重复。"
+                         TextWrapping="Wrap" Opacity="0.72" />
+              <NumericUpDown Minimum="1" Maximum="{Binding Settings.CycleLength}"
+                             Value="{Binding Settings.CurrentCycleDay, Mode=TwoWay}" Width="160" />
+            </StackPanel>
+          </Expander>
+        </StackPanel>
+      </Border>
+
+      <Expander>
+        <Expander.Header>
+          <StackPanel Spacing="3">
+            <TextBlock Text="班级时间表轮换（第一批 / 第二批）" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="课程内容保持不变，只按当天批次加载对应的 ClassIsland 时间表。" Opacity="0.72" />
+          </StackPanel>
+        </Expander.Header>
+        <Border Padding="20" Margin="0 10 0 0" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="18">
+            <StackPanel Spacing="8">
+              <TextBlock Text="1. 轮换依据（请选择一种）" FontSize="16" FontWeight="SemiBold" />
+              <Border Padding="14" CornerRadius="7" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+                <StackPanel Spacing="12">
+                  <RadioButton GroupName="RotationBasis"
+                               IsChecked="{Binding Settings.UseCalendarDateNumber, Mode=TwoWay}"
+                               Content="方案 A：按每月日期号轮换" FontWeight="SemiBold" />
+                  <TextBlock Margin="30 0 0 4"
+                             Text="两个批次时：单号加载第一批时间表，双号加载第二批时间表；每月 1 日重新开始。"
+                             TextWrapping="Wrap" Opacity="0.76" />
+
+                  <RadioButton GroupName="RotationBasis"
+                               IsChecked="{Binding Settings.IsContinuousRotation, Mode=TwoWay}"
+                               Content="方案 B：从指定日期连续轮换" FontWeight="SemiBold" />
+                  <TextBlock Margin="30 0 0 4"
+                             Text="先指定今天使用哪个批次，以后每过一个自然日进入下一批。月底不重置，休息日也计数。"
+                             TextWrapping="Wrap" Opacity="0.76" />
+                  <StackPanel Margin="30 0 0 4" Orientation="Horizontal" Spacing="8"
+                              IsVisible="{Binding Settings.IsContinuousRotation}">
+                    <TextBlock Text="校准：今天全班使用第" VerticalAlignment="Center" />
+                    <NumericUpDown Minimum="1" Maximum="{Binding Settings.RotationDayMaximum}"
+                                   Value="{Binding Settings.CurrentRotationDay, Mode=TwoWay}" Width="110" />
+                    <TextBlock Text="个批次" VerticalAlignment="Center" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+              <TextBlock Text="2. 每个批次加载哪一份时间表" FontSize="16" FontWeight="SemiBold" />
+              <TextBlock Text="第一批和第二批共用同一套周一至周 N 课程，仅选择不同的时间表。可先复制基础时间表，再只修改就餐等时间线。"
+                         TextWrapping="Wrap" Opacity="0.72" />
+              <ItemsControl ItemsSource="{Binding Settings.RotationSteps}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Padding="14" Margin="0 0 0 8" CornerRadius="7"
+                            Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+                      <Grid ColumnDefinitions="190,*,Auto" ColumnSpacing="18">
+                        <StackPanel Spacing="5">
+                          <TextBlock Text="班级批次" FontWeight="SemiBold" />
+                          <TextBox Text="{Binding Name, Mode=TwoWay}" Watermark="例如：第一批" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="5">
+                          <TextBlock Text="加载的时间表" FontWeight="SemiBold" />
+                          <ComboBox ItemsSource="{Binding $parent[ItemsControl].DataContext.ProfileService.Profile.TimeLayouts.List}"
+                                    SelectedValue="{Binding TimeLayoutId, Mode=TwoWay}"
+                                    SelectedValueBinding="{Binding Key}" MinWidth="320">
+                            <ComboBox.ItemTemplate>
+                              <DataTemplate>
+                                <TextBlock Text="{Binding Value.Name}" ToolTip.Tip="{Binding Key}" />
+                              </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                          </ComboBox>
+                        </StackPanel>
+                        <Button Grid.Column="2" Content="删除此批次" Click="RemoveRotationStep_OnClick"
+                                Margin="8 0 0 0" VerticalAlignment="Bottom" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="添加下一批" Click="AddRotationStep_OnClick" />
+                <Button Content="打开时间表编辑器" Click="OpenProfileEditor_OnClick" />
+              </StackPanel>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+              <TextBlock Text="3. 开启自动加载" FontSize="16" FontWeight="SemiBold" />
+              <Border Padding="14" CornerRadius="7" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+                <StackPanel Spacing="8">
+                  <ToggleSwitch IsChecked="{Binding Settings.IsRotationEnabled, Mode=TwoWay}"
+                                OnContent="已按班级批次自动加载时间表"
+                                OffContent="暂不切换，继续使用基础时间表" />
+                  <TextBlock Text="开启后，插件会在加载当天课表前，把周一至周 N 的课程绑定到今天批次对应的时间表。"
+                             TextWrapping="Wrap" Opacity="0.72" />
+                </StackPanel>
+              </Border>
+              <Border Padding="12" CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="今天的加载结果" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding Settings.RotationStatus}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </Expander>
+
+      <Expander>
+        <Expander.Header>
+          <StackPanel Spacing="3">
+            <TextBlock Text="Windows 定时关机（可选）" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="每天在指定时间显示覆盖全部屏幕、可随时取消的关机倒计时。" Opacity="0.72" />
+          </StackPanel>
+        </Expander.Header>
+        <Border Padding="20" Margin="0 10 0 0" CornerRadius="10"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+          <StackPanel Spacing="18">
+            <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
+                              Title="启用前请确认教室电脑已保存重要内容"
+                              Message="倒计时结束后会请求 Windows 正常关机。点击任意屏幕或按 Esc 可取消；锁屏时看不到提示，也无法点击取消。" />
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+              <StackPanel Spacing="5">
+                <TextBlock Text="自动关机计划" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="新安装默认暂停，需手动开启。" TextWrapping="Wrap" Opacity="0.72" />
+              </StackPanel>
+              <ToggleSwitch Grid.Column="1"
+                            IsChecked="{Binding AutoShutdownSettings.IsEnabled, Mode=TwoWay}"
+                            OnContent="已启用" OffContent="已暂停"
+                            VerticalAlignment="Center" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+              <StackPanel Spacing="6">
+                <TextBlock Text="每天几点关机" FontWeight="SemiBold" />
+                <TimePicker SelectedTime="{Binding AutoShutdownSettings.ShutdownTime, Mode=TwoWay}"
+                            Width="170" HorizontalAlignment="Left" />
+                <TextBlock Text="错过计划时间或从睡眠恢复后不会补触发。"
+                           TextWrapping="Wrap" Opacity="0.68" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6">
+                <TextBlock Text="倒计时秒数" FontWeight="SemiBold" />
+                <NumericUpDown Minimum="1" Maximum="3600" Increment="1"
+                               Value="{Binding AutoShutdownSettings.CountdownSeconds, Mode=TwoWay}"
+                               Width="170" HorizontalAlignment="Left" />
+                <TextBlock Text="可设置 1–3600 秒，倒计时期间可取消。"
+                           TextWrapping="Wrap" Opacity="0.68" />
+              </StackPanel>
+            </Grid>
+
+            <Border Padding="14" CornerRadius="7"
+                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
+                <StackPanel Spacing="5">
+                  <TextBlock Text="运行状态" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding AutoShutdownSettings.NextOccurrenceText}"
+                             FontSize="16" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding AutoShutdownSettings.RuntimeStatus}"
+                             TextWrapping="Wrap" Opacity="0.72" />
+                </StackPanel>
+                <Button x:Name="AutoShutdownPreviewButton" Grid.Column="1"
+                        Content="安全预览倒计时" Click="AutoShutdownPreview_OnClick"
+                        VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Border>
+      </Expander>
+
+      <TextBlock Text="当天临时课表优先于休息日重复和正常周期；关闭插件后会恢复接管前的课表状态。"
+                 TextWrapping="Wrap" Opacity="0.62" />
+    </StackPanel>
+  </ScrollViewer>
+</ci:SettingsPageBase>
