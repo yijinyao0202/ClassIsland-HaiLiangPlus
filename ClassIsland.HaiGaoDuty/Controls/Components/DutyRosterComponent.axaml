@@ -1,4 +1,5 @@
 <controls:ComponentBase x:Class="ClassIsland.HaiGaoDuty.Controls.Components.DutyRosterComponent"
+                        x:Name="Root"
                         xmlns="https://github.com/avaloniaui"
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,7 +13,7 @@
               VerticalAlignment="Center">
     <TextBlock Text="值日生"
                Opacity="0.72" />
-    <TextBlock Text="{Binding TodayDisplay}"
+    <TextBlock Text="{Binding DutyRoster.TodayDisplay, ElementName=Root}"
                FontWeight="SemiBold"
                TextTrimming="CharacterEllipsis" />
   </StackPanel>
