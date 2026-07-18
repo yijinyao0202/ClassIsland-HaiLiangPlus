@@ -59,7 +59,7 @@ public sealed class CycleScheduleEditorHostService(
     private void ScanWindows()
     {
         CleanupClosedEditors();
-        if (!settings.IsEnabled)
+        if (!settings.HasCompletedOnboarding)
         {
             RestoreInjectedControls();
             return;
@@ -72,7 +72,14 @@ public sealed class CycleScheduleEditorHostService(
                 continue;
             }
 
-            EnsureRestDayControl(window);
+            if (settings.IsTakeoverEnabled)
+            {
+                EnsureRestDayControl(window);
+            }
+            else
+            {
+                RemoveRestDayControl(window);
+            }
 
             var originalEditor = window.GetVisualDescendants()
                 .OfType<Control>()

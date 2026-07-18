@@ -18,6 +18,7 @@
           <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right">
             <TextBlock Text="完全接管" HorizontalAlignment="Right" Opacity="0.72" />
             <ToggleSwitch IsChecked="{Binding Settings.IsEnabled, Mode=TwoWay}"
+                          Click="TakeoverToggle_OnClick"
                           OnContent="已启用" OffContent="已暂停" />
           </StackPanel>
         </Grid>

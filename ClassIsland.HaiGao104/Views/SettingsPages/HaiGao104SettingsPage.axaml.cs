@@ -49,8 +49,26 @@ public partial class HaiGao104SettingsPage : SettingsPageBase
 
     private void AddRotationStep_OnClick(object? sender, RoutedEventArgs e) => Settings.AddRotationStep();
 
-    private void OpenProfileEditor_OnClick(object? sender, RoutedEventArgs e) =>
-        IAppHost.GetService<IUriNavigationService>().Navigate(new Uri("classisland://app/profile"));
+    private async void TakeoverToggle_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (!Settings.HasCompletedOnboarding)
+        {
+            await _onboardingService.ShowAsync();
+        }
+    }
+
+    private async void OpenProfileEditor_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (!Settings.HasCompletedOnboarding)
+        {
+            await _onboardingService.ShowAsync();
+        }
+
+        if (Settings.HasCompletedOnboarding)
+        {
+            IAppHost.GetService<IUriNavigationService>().Navigate(new Uri("classisland://app/profile"));
+        }
+    }
 
     private void ShowOnboarding_OnClick(object? sender, RoutedEventArgs e) =>
         _ = _onboardingService.ShowAsync(true);
