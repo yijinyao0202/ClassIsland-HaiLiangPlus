@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using ClassIsland.Core.Abstractions.Services;
@@ -26,6 +28,8 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     private bool _canAddDay = true;
     private bool _canRestoreArchive;
     private bool _isRefreshingTimeLayoutSelection;
+    private bool _isSynchronizingScroll;
+    private int _scrollRequestVersion;
     private CycleDayHeader? _selectedTodayDay;
     private ArchivedCyclePlan? _selectedArchivedPlan;
     private CycleTimeLayoutOption? _selectedTimeLayout;
@@ -95,7 +99,13 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     public CycleDayHeader? SelectedTodayDay
     {
         get => _selectedTodayDay;
-        set => SetField(ref _selectedTodayDay, value);
+        set
+        {
+            if (SetField(ref _selectedTodayDay, value))
+            {
+                QueueSelectedDayIntoView();
+            }
+        }
     }
 
     public ArchivedCyclePlan? SelectedArchivedPlan
@@ -122,6 +132,75 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     public void ReleaseProfileSubscriptions() => UnsubscribeClassInfos();
 
     private void Refresh_OnClick(object? sender, RoutedEventArgs e) => Refresh(true);
+
+    private void LocateSelectedDay_OnClick(object? sender, RoutedEventArgs e) => QueueSelectedDayIntoView();
+
+    private void ScheduleScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (_isSynchronizingScroll || sender is not ScrollViewer scrollViewer)
+        {
+            return;
+        }
+
+        _isSynchronizingScroll = true;
+        try
+        {
+            DayHeaderScrollViewer.Offset = new Vector(scrollViewer.Offset.X, 0);
+            LessonLabelScrollViewer.Offset = new Vector(0, scrollViewer.Offset.Y);
+        }
+        finally
+        {
+            _isSynchronizingScroll = false;
+        }
+    }
+
+    private void AuxiliaryScrollViewer_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        var horizontalDelta = e.Delta.X;
+        var verticalDelta = e.Delta.Y;
+        if (Math.Abs(horizontalDelta) < double.Epsilon && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            horizontalDelta = verticalDelta;
+            verticalDelta = 0;
+        }
+
+        const double scrollStep = 48;
+        var maximumX = Math.Max(0, ScheduleScrollViewer.Extent.Width - ScheduleScrollViewer.Viewport.Width);
+        var maximumY = Math.Max(0, ScheduleScrollViewer.Extent.Height - ScheduleScrollViewer.Viewport.Height);
+        ScheduleScrollViewer.Offset = new Vector(
+            Math.Clamp(ScheduleScrollViewer.Offset.X - horizontalDelta * scrollStep, 0, maximumX),
+            Math.Clamp(ScheduleScrollViewer.Offset.Y - verticalDelta * scrollStep, 0, maximumY));
+        e.Handled = true;
+    }
+
+    private void QueueSelectedDayIntoView()
+    {
+        var requestVersion = ++_scrollRequestVersion;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (requestVersion == _scrollRequestVersion)
+            {
+                ScrollSelectedDayIntoView();
+            }
+        }, DispatcherPriority.Background);
+    }
+
+    private void ScrollSelectedDayIntoView()
+    {
+        if (SelectedTodayDay is not { } selectedDay || ScheduleScrollViewer.Viewport.Width <= 0)
+        {
+            return;
+        }
+
+        const double dayWidth = 194;
+        const double cardWidth = 190;
+        var centeredOffset = selectedDay.Index * dayWidth -
+                             (ScheduleScrollViewer.Viewport.Width - cardWidth) / 2;
+        var maximumOffset = Math.Max(0, ScheduleScrollViewer.Extent.Width - ScheduleScrollViewer.Viewport.Width);
+        ScheduleScrollViewer.Offset = new Vector(
+            Math.Clamp(centeredOffset, 0, maximumOffset),
+            ScheduleScrollViewer.Offset.Y);
+    }
 
     private void TimeLayout_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {

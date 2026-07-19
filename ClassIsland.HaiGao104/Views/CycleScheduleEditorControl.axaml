@@ -45,7 +45,7 @@
         </Grid>
         <TextBlock Text="直接选择“时间表”页中已有的时间表；不会复制、改名或删除。这里决定周一至周 N 课程格使用哪些上课时间点；不同班级批次仍可在 HL Education + 设置中分别绑定时间表。"
                    TextWrapping="Wrap" FontSize="12" Opacity="0.72" />
-        <Grid ColumnDefinitions="Auto,130,Auto,Auto,*" ColumnSpacing="8">
+        <Grid ColumnDefinitions="Auto,130,Auto,Auto,Auto,*" ColumnSpacing="8">
           <TextBlock Text="今天是" VerticalAlignment="Center" />
           <ComboBox Grid.Column="1"
                     ItemsSource="{Binding DayHeaders}"
@@ -58,6 +58,7 @@
           </ComboBox>
           <Button Grid.Column="2" Content="设为今天" Click="SetToday_OnClick" />
           <Button Grid.Column="3" Content="末尾新增" Click="AddEnd_OnClick" IsEnabled="{Binding CanAddDay}" />
+          <Button Grid.Column="4" Content="定位所选周" Click="LocateSelectedDay_OnClick" />
         </Grid>
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
           <TextBlock Text="归档恢复" VerticalAlignment="Center" />
@@ -78,87 +79,112 @@
       </StackPanel>
     </Border>
 
-    <Grid Grid.Row="2">
-      <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                    VerticalScrollBarVisibility="Auto">
-        <StackPanel>
-          <StackPanel Orientation="Horizontal">
-            <Border Width="112" MinHeight="96" Padding="8" Margin="0 0 4 4"
-                    CornerRadius="6" Classes="cycle-header">
-              <TextBlock Text="时间" FontWeight="SemiBold" VerticalAlignment="Center" />
-            </Border>
-            <ItemsControl ItemsSource="{Binding DayHeaders}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border Width="190" MinHeight="96" Padding="8" Margin="0 0 4 4"
-                          CornerRadius="6" Classes="cycle-header"
-                          Classes.current="{Binding IsCurrent}">
-                    <StackPanel Spacing="3">
-                      <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"
-                                 HorizontalAlignment="Center" />
-                      <TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.72"
-                                 HorizontalAlignment="Center" />
-                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                        <Button Content="前插" Padding="6 2" FontSize="11" Click="InsertBefore_OnClick" />
-                        <Button Content="后插" Padding="6 2" FontSize="11" Click="InsertAfter_OnClick" />
-                        <Button Content="归档" Padding="6 2" FontSize="11" Click="Archive_OnClick"
-                                IsEnabled="{Binding CanArchive}" />
-                      </StackPanel>
-                    </StackPanel>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </StackPanel>
+    <Grid Grid.Row="2" RowDefinitions="Auto,*" ColumnDefinitions="116,*">
+      <Border Grid.Row="0" Grid.Column="0"
+              Width="112" MinHeight="96" Padding="8" Margin="0 0 4 4"
+              CornerRadius="6" Classes="cycle-header">
+        <TextBlock Text="时间" FontWeight="SemiBold" VerticalAlignment="Center" />
+      </Border>
 
-          <ItemsControl ItemsSource="{Binding Rows}">
+      <ScrollViewer x:Name="DayHeaderScrollViewer"
+                    Grid.Row="0" Grid.Column="1"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Disabled"
+                    PointerWheelChanged="AuxiliaryScrollViewer_OnPointerWheelChanged">
+        <StackPanel Orientation="Horizontal">
+          <ItemsControl ItemsSource="{Binding DayHeaders}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <StackPanel Orientation="Horizontal">
-                  <Border Width="112" MinHeight="54" Padding="8" Margin="0 0 4 4"
-                          CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-                    <StackPanel VerticalAlignment="Center">
-                      <TextBlock Text="{Binding LessonName}" FontWeight="SemiBold" />
-                      <TextBlock Text="{Binding TimeText}" FontSize="12" Opacity="0.72" />
+                <Border Width="190" MinHeight="96" Padding="8" Margin="0 0 4 4"
+                        CornerRadius="6" Classes="cycle-header"
+                        Classes.current="{Binding IsCurrent}">
+                  <StackPanel Spacing="3">
+                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.72"
+                               HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                      <Button Content="前插" Padding="6 2" FontSize="11" Click="InsertBefore_OnClick" />
+                      <Button Content="后插" Padding="6 2" FontSize="11" Click="InsertAfter_OnClick" />
+                      <Button Content="归档" Padding="6 2" FontSize="11" Click="Archive_OnClick"
+                              IsEnabled="{Binding CanArchive}" />
                     </StackPanel>
-                  </Border>
-                  <ItemsControl ItemsSource="{Binding Cells}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <Border Width="190" MinHeight="54" Padding="5" Margin="0 0 4 4"
-                                CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-                          <ComboBox ItemsSource="{Binding SubjectOptions}"
-                                    SelectedValue="{Binding ClassInfo.SubjectId, Mode=TwoWay}"
-                                    SelectedValueBinding="{Binding Id}"
-                                    HorizontalAlignment="Stretch">
-                            <ComboBox.ItemTemplate>
-                              <DataTemplate>
-                                <TextBlock Text="{Binding Name}" />
-                              </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                          </ComboBox>
-                        </Border>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
+                  </StackPanel>
+                </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+          <Border Width="16" />
         </StackPanel>
       </ScrollViewer>
 
-      <Border IsVisible="{Binding IsEmpty}" Padding="24" CornerRadius="8"
+      <ScrollViewer x:Name="LessonLabelScrollViewer"
+                    Grid.Row="1" Grid.Column="0"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Hidden"
+                    PointerWheelChanged="AuxiliaryScrollViewer_OnPointerWheelChanged">
+        <StackPanel>
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Width="112" MinHeight="54" Padding="8" Margin="0 0 4 4"
+                        CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding LessonName}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding TimeText}" FontSize="12" Opacity="0.72" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Border Height="16" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <ScrollViewer x:Name="ScheduleScrollViewer"
+                    Grid.Row="1" Grid.Column="1"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    ScrollChanged="ScheduleScrollViewer_OnScrollChanged">
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ItemsControl ItemsSource="{Binding Cells}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Width="190" MinHeight="54" Padding="5" Margin="0 0 4 4"
+                            CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                      <ComboBox ItemsSource="{Binding SubjectOptions}"
+                                SelectedValue="{Binding ClassInfo.SubjectId, Mode=TwoWay}"
+                                SelectedValueBinding="{Binding Id}"
+                                HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                          <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                          </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                      </ComboBox>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <Border Grid.RowSpan="2" Grid.ColumnSpan="2"
+              IsVisible="{Binding IsEmpty}" Padding="24" CornerRadius="8"
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
               HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
         <TextBlock Text="所选时间表还没有上课时间点。请先到“时间表”页添加，或在上方改选已有时间表；随后这里会自动出现周一、周二……周N 的课程格。"
