@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using ClassIsland.Core.Abstractions.Controls;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Attributes;
+using ClassIsland.HaiGaoAutoShutdown.Models;
 using ClassIsland.HaiGaoAutoShutdown.Services;
 using ClassIsland.HaiGao104.Services;
 using ClassIsland.Shared;
@@ -102,6 +103,17 @@ public partial class HaiGao104SettingsPage : SettingsPageBase
         finally
         {
             AutoShutdownPreviewButton.IsEnabled = true;
+        }
+    }
+
+    private void AddAutoShutdownSchedule_OnClick(object? sender, RoutedEventArgs e) =>
+        AutoShutdownSettings.AddSchedule();
+
+    private void RemoveAutoShutdownSchedule_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: AutoShutdownSchedule schedule })
+        {
+            AutoShutdownSettings.RemoveSchedule(schedule);
         }
     }
 
