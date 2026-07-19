@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.Core.Helpers.UI;
 using ClassIsland.HaiGao104.Models;
@@ -28,6 +29,7 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     private CycleDayHeader? _selectedTodayDay;
     private ArchivedCyclePlan? _selectedArchivedPlan;
     private CycleTimeLayoutOption? _selectedTimeLayout;
+    private IReadOnlyList<CycleTimeLayoutOption> _timeLayoutOptions = [];
 
     public CycleScheduleEditorControl() : this(
         IAppHost.GetService<CycleSettingsService>(),
@@ -58,7 +60,11 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
 
     public ObservableCollection<ArchivedCyclePlan> ArchivedPlans { get; } = [];
 
-    public ObservableCollection<CycleTimeLayoutOption> TimeLayoutOptions { get; } = [];
+    public IReadOnlyList<CycleTimeLayoutOption> TimeLayoutOptions
+    {
+        get => _timeLayoutOptions;
+        private set => SetField(ref _timeLayoutOptions, value);
+    }
 
     public ObservableCollection<CycleScheduleRow> Rows { get; } = [];
 
@@ -126,7 +132,7 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
 
         if (_cyclePlanService.SelectManagedTimeLayout(selectedTimeLayout.Id))
         {
-            Refresh(true);
+            Dispatcher.UIThread.Post(() => Refresh(true), DispatcherPriority.Background);
         }
     }
 
@@ -365,14 +371,16 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
         try
         {
             var selectedTimeLayoutId = _settings.ManagedTimeLayoutId;
-            TimeLayoutOptions.Clear();
-            foreach (var (id, timeLayout) in profile.TimeLayouts.OrderBy(item => item.Value.Name))
+            var options = profile.TimeLayouts
+                .OrderBy(item => item.Value.Name)
+                .Select(item => new CycleTimeLayoutOption(
+                    item.Key,
+                    string.IsNullOrWhiteSpace(item.Value.Name) ? "（未命名时间表）" : item.Value.Name,
+                    item.Value.Layouts.Count(layout => layout.TimeType == 0)))
+                .ToArray();
+            if (!TimeLayoutOptions.SequenceEqual(options))
             {
-                var lessonCount = timeLayout.Layouts.Count(item => item.TimeType == 0);
-                TimeLayoutOptions.Add(new CycleTimeLayoutOption(
-                    id,
-                    string.IsNullOrWhiteSpace(timeLayout.Name) ? "（未命名时间表）" : timeLayout.Name,
-                    lessonCount));
+                TimeLayoutOptions = options;
             }
 
             SelectedTimeLayout = TimeLayoutOptions.FirstOrDefault(item => item.Id == selectedTimeLayoutId)
