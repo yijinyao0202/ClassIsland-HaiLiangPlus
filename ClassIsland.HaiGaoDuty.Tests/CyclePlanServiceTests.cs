@@ -64,6 +64,45 @@ public sealed class CyclePlanServiceTests
         });
     }
 
+    [Fact]
+    public void ExistingTimeLayoutCanBecomeManagedWithoutCopyOrRename()
+    {
+        WithService((settings, profile, bridge, service, customTimeLayoutId) =>
+        {
+            service.EnsureManagedSchedules();
+            var countBeforeSelection = profile.TimeLayouts.Count;
+
+            var selected = service.SelectManagedTimeLayout(customTimeLayoutId);
+
+            Assert.True(selected);
+            Assert.Equal(customTimeLayoutId, settings.ManagedTimeLayoutId);
+            Assert.Equal(countBeforeSelection, profile.TimeLayouts.Count);
+            Assert.Equal("用户自定义时间表", profile.TimeLayouts[customTimeLayoutId].Name);
+            Assert.All(settings.ManagedClassPlanIds, classPlanId =>
+                Assert.Equal(customTimeLayoutId, profile.ClassPlans[classPlanId].TimeLayoutId));
+            Assert.All(settings.RotationSteps, step =>
+                Assert.Equal(customTimeLayoutId, step.TimeLayoutId));
+            Assert.True(bridge.SaveCount > 0);
+        });
+    }
+
+    [Fact]
+    public void SelectingManagedTimeLayoutPreservesCustomBatchSelection()
+    {
+        WithService((settings, profile, _, service, customTimeLayoutId) =>
+        {
+            service.EnsureManagedSchedules();
+            var customBatchTimeLayoutId = Guid.NewGuid();
+            profile.TimeLayouts.Add(customBatchTimeLayoutId, new TimeLayout { Name = "第二批专用时间表" });
+            settings.RotationSteps[1].TimeLayoutId = customBatchTimeLayoutId;
+
+            Assert.True(service.SelectManagedTimeLayout(customTimeLayoutId));
+
+            Assert.Equal(customTimeLayoutId, settings.RotationSteps[0].TimeLayoutId);
+            Assert.Equal(customBatchTimeLayoutId, settings.RotationSteps[1].TimeLayoutId);
+        });
+    }
+
     private static void WithService(
         Action<CycleSettingsService, Profile, FakeScheduleControlBridge, CyclePlanService, Guid> action)
     {

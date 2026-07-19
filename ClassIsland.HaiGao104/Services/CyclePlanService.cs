@@ -135,6 +135,32 @@ public sealed class CyclePlanService(
         return duplicatedLayoutId;
     }
 
+    public bool SelectManagedTimeLayout(Guid timeLayoutId)
+    {
+        var managedIds = EnsureManagedSchedules().ToArray();
+        var profile = scheduleBridge.Profile;
+        if (!profile.TimeLayouts.ContainsKey(timeLayoutId))
+        {
+            return false;
+        }
+
+        var previousTimeLayoutId = settings.ManagedTimeLayoutId;
+        if (previousTimeLayoutId == timeLayoutId)
+        {
+            return true;
+        }
+
+        foreach (var step in settings.RotationSteps.Where(step =>
+                     step.TimeLayoutId is null || step.TimeLayoutId == previousTimeLayoutId))
+        {
+            step.TimeLayoutId = timeLayoutId;
+        }
+
+        settings.SetManagedScheduleState(managedIds, timeLayoutId, settings.ArchivedCyclePlans);
+        EnsureManagedSchedules();
+        return true;
+    }
+
     public bool InsertDay(int insertIndex)
     {
         var managedIds = EnsureManagedSchedules().ToList();
@@ -320,21 +346,19 @@ public sealed class CyclePlanService(
         ref bool changed)
     {
         if (settings.ManagedTimeLayoutId is { } configuredTimeLayoutId &&
-            profile.TimeLayouts.TryGetValue(configuredTimeLayoutId, out var configuredTimeLayout))
+            profile.TimeLayouts.ContainsKey(configuredTimeLayoutId))
         {
-            changed |= ConfigureManagedTimeLayout(configuredTimeLayout);
             return configuredTimeLayoutId;
         }
 
         foreach (var managedId in managedIds)
         {
             var existingTimeLayoutId = profile.ClassPlans[managedId].TimeLayoutId;
-            if (!profile.TimeLayouts.TryGetValue(existingTimeLayoutId, out var existingTimeLayout))
+            if (!profile.TimeLayouts.ContainsKey(existingTimeLayoutId))
             {
                 continue;
             }
 
-            changed |= ConfigureManagedTimeLayout(existingTimeLayout);
             return existingTimeLayoutId;
         }
 
@@ -343,7 +367,7 @@ public sealed class CyclePlanService(
             ? value
             : null;
         var managedTimeLayout = sourceTimeLayout is null ? new TimeLayout() : Duplicate(sourceTimeLayout);
-        ConfigureManagedTimeLayout(managedTimeLayout);
+        managedTimeLayout.Name = GetUniqueTimeLayoutName(profile, ManagedTimeLayoutName);
         var timeLayoutId = Guid.NewGuid();
         profile.TimeLayouts.Add(timeLayoutId, managedTimeLayout);
         changed = true;
@@ -386,17 +410,6 @@ public sealed class CyclePlanService(
                profile.TimeLayouts.ContainsKey(activeId)
             ? activeId
             : baseTimeLayoutId;
-    }
-
-    private static bool ConfigureManagedTimeLayout(TimeLayout timeLayout)
-    {
-        var changed = false;
-        if (timeLayout.Name != ManagedTimeLayoutName)
-        {
-            timeLayout.Name = ManagedTimeLayoutName;
-            changed = true;
-        }
-        return changed;
     }
 
     private static string GetUniqueTimeLayoutName(Profile profile, string baseName)
