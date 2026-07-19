@@ -119,6 +119,8 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
 
     public void RefreshIfChanged() => Refresh(false);
 
+    public void ReleaseProfileSubscriptions() => UnsubscribeClassInfos();
+
     private void Refresh_OnClick(object? sender, RoutedEventArgs e) => Refresh(true);
 
     private void TimeLayout_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)

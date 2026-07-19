@@ -8,6 +8,7 @@ using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Services;
 using ClassIsland.HaiGao104.Views;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ClassIsland.HaiGao104.Services;
 
@@ -15,13 +16,16 @@ public sealed class CycleScheduleEditorHostService(
     CycleSettingsService settings,
     CyclePlanService cyclePlanService,
     IScheduleControlBridge scheduleBridge,
-    IExactTimeService exactTimeService) : IHostedService
+    IExactTimeService exactTimeService,
+    ILogger<CycleScheduleEditorHostService> logger) : IHostedService
 {
     private readonly Dictionary<Control, CycleScheduleEditorControl> _editors = [];
+    private readonly HashSet<Control> _pendingEditors = [];
     private readonly Dictionary<Window, RestDayOverrideControl> _restDayControls = [];
     private IDisposable? _editorLoadedSubscription;
     private Style? _originalEditorSuppressionStyle;
     private DispatcherTimer? _timer;
+    private int _scanQueued;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -50,7 +54,7 @@ public sealed class CycleScheduleEditorHostService(
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _timer.Tick += Timer_OnTick;
         _timer.Start();
-        ScanWindows();
+        QueueScan();
     }
 
     private void StopOnUiThread()
@@ -64,14 +68,15 @@ public sealed class CycleScheduleEditorHostService(
             _timer.Tick -= Timer_OnTick;
             _timer = null;
         }
+        Interlocked.Exchange(ref _scanQueued, 0);
+        _pendingEditors.Clear();
         RemoveOriginalEditorSuppressionStyle();
         RestoreInjectedControls();
     }
 
-    private void Timer_OnTick(object? sender, EventArgs e) => ScanWindows();
+    private void Timer_OnTick(object? sender, EventArgs e) => QueueScan();
 
-    private void Settings_OnChanged(object? sender, EventArgs e) =>
-        Dispatcher.UIThread.Post(ScanWindows, DispatcherPriority.Send);
+    private void Settings_OnChanged(object? sender, EventArgs e) => QueueScan();
 
     private void OriginalEditor_OnLoaded(Control control, RoutedEventArgs e)
     {
@@ -80,7 +85,33 @@ public sealed class CycleScheduleEditorHostService(
             return;
         }
 
-        EnsureEditor(control);
+        QueueScan();
+    }
+
+    private void QueueScan()
+    {
+        if (Interlocked.Exchange(ref _scanQueued, 1) != 0)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            Interlocked.Exchange(ref _scanQueued, 0);
+            if (_timer is null)
+            {
+                return;
+            }
+
+            try
+            {
+                ScanWindows();
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "刷新 HL Education + 课表编辑器失败。");
+            }
+        }, DispatcherPriority.Background);
     }
 
     private void ScanWindows()
@@ -129,19 +160,41 @@ public sealed class CycleScheduleEditorHostService(
             return;
         }
 
-        if (originalEditor.Parent is not Grid parent)
+        if (!_pendingEditors.Add(originalEditor))
         {
             return;
         }
 
-        var editor = new CycleScheduleEditorControl(settings, cyclePlanService, scheduleBridge, exactTimeService);
-        Grid.SetRow(editor, Grid.GetRow(originalEditor));
-        Grid.SetColumn(editor, Grid.GetColumn(originalEditor));
-        Grid.SetRowSpan(editor, Grid.GetRowSpan(originalEditor));
-        Grid.SetColumnSpan(editor, Grid.GetColumnSpan(originalEditor));
-        parent.Children.Add(editor);
-        originalEditor.IsVisible = false;
-        _editors.Add(originalEditor, editor);
+        try
+        {
+            if (originalEditor.Parent is not Grid parent)
+            {
+                return;
+            }
+
+            var editor = new CycleScheduleEditorControl(settings, cyclePlanService, scheduleBridge, exactTimeService);
+            Grid.SetRow(editor, Grid.GetRow(originalEditor));
+            Grid.SetColumn(editor, Grid.GetColumn(originalEditor));
+            Grid.SetRowSpan(editor, Grid.GetRowSpan(originalEditor));
+            Grid.SetColumnSpan(editor, Grid.GetColumnSpan(originalEditor));
+            _editors.Add(originalEditor, editor);
+            originalEditor.IsVisible = false;
+            try
+            {
+                parent.Children.Add(editor);
+            }
+            catch
+            {
+                originalEditor.IsVisible = true;
+                _editors.Remove(originalEditor);
+                editor.ReleaseProfileSubscriptions();
+                throw;
+            }
+        }
+        finally
+        {
+            _pendingEditors.Remove(originalEditor);
+        }
     }
 
     private void UpdateOriginalEditorSuppressionStyle()
@@ -231,6 +284,7 @@ public sealed class CycleScheduleEditorHostService(
         {
             parent.Children.Remove(editor);
         }
+        editor.ReleaseProfileSubscriptions();
         originalEditor.IsVisible = true;
     }
 
