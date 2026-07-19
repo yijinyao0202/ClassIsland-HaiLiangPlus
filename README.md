@@ -1,6 +1,6 @@
 # 海亮教育+
 
-用于完全接管 ClassIsland 的每日课表选择，并按自定义上课、休息周期运行。当前版本为 `2.0.0.3`，课表、定时关机和值日生只需安装一个 `.cipx`。
+用于完全接管 ClassIsland 的每日课表选择，并按自定义上课、休息周期运行。当前版本为 `2.0.0.4`，课表、定时关机和值日生只需安装一个 `.cipx`。
 
 ## 免责声明
 
@@ -9,6 +9,11 @@
 ## 下载与安装
 
 从 [GitHub Releases](https://github.com/yijinyao0202/ClassIsland-HaiLiangPlus/releases/latest) 下载 `ClassIsland.HaiGao104.cipx`，在 ClassIsland 的“应用设置 → 插件”中安装并重启软件。
+
+### 2.0.0.4 修复
+
+- 修复在“课表”页切换时间表时，下拉框同步刷新数据源导致 `ArgumentOutOfRangeException` 并触发插件自动禁用的问题。
+- 时间表选项改为稳定的只读列表，并在选择事件结束后刷新课表，避免 Avalonia 选择模型重入。
 
 ### 2.0.0.3 修复
 
