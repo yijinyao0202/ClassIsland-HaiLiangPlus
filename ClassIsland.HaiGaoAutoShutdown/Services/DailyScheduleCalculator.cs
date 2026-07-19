@@ -1,3 +1,5 @@
+using ClassIsland.HaiGaoAutoShutdown.Models;
+
 namespace ClassIsland.HaiGaoAutoShutdown.Services;
 
 public enum ScheduleCrossingResult
@@ -10,6 +12,39 @@ public enum ScheduleCrossingResult
 
 public static class DailyScheduleCalculator
 {
+    public static AutoShutdownOccurrence? GetNextOccurrence(
+        DateTime now,
+        IReadOnlyList<AutoShutdownScheduleSnapshot> schedules,
+        DateTime? lastHandledOccurrence)
+    {
+        return schedules
+            .Select(schedule => new AutoShutdownOccurrence(
+                schedule.Id,
+                schedule.Name,
+                MoveAfterHandledOccurrence(
+                    GetNextOccurrence(now, schedule.ShutdownTime),
+                    lastHandledOccurrence)))
+            .OrderBy(occurrence => occurrence.OccursAt)
+            .ThenBy(occurrence => occurrence.ScheduleName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(occurrence => occurrence.ScheduleId)
+            .FirstOrDefault();
+    }
+
+    public static AutoShutdownOccurrence? GetLatestOccurrenceAtOrBefore(
+        DateTime now,
+        IReadOnlyList<AutoShutdownScheduleSnapshot> schedules)
+    {
+        return schedules
+            .Select(schedule => new AutoShutdownOccurrence(
+                schedule.Id,
+                schedule.Name,
+                GetLatestOccurrenceAtOrBefore(now, schedule.ShutdownTime)))
+            .OrderByDescending(occurrence => occurrence.OccursAt)
+            .ThenBy(occurrence => occurrence.ScheduleName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(occurrence => occurrence.ScheduleId)
+            .FirstOrDefault();
+    }
+
     public static DateTime GetNextOccurrence(DateTime now, TimeSpan shutdownTime)
     {
         var normalizedTime = NormalizeTime(shutdownTime);
@@ -62,4 +97,17 @@ public static class DailyScheduleCalculator
         time >= TimeSpan.Zero && time < TimeSpan.FromDays(1)
             ? new TimeSpan(time.Hours, time.Minutes, 0)
             : new TimeSpan(22, 0, 0);
+
+    private static DateTime MoveAfterHandledOccurrence(
+        DateTime candidate,
+        DateTime? lastHandledOccurrence)
+    {
+        if (lastHandledOccurrence is not { } handled || candidate > handled)
+        {
+            return candidate;
+        }
+
+        var daysToAdvance = (int)Math.Floor((handled - candidate).TotalDays) + 1;
+        return candidate.AddDays(daysToAdvance);
+    }
 }

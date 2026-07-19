@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using ClassIsland.Core.Abstractions.Services;
+using ClassIsland.HaiGaoAutoShutdown.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -21,7 +22,7 @@ public sealed class AutoShutdownSchedulerService(
         settings.SettingsChanged += OnSettingsChanged;
         var observedRevision = Volatile.Read(ref _settingsRevision);
         var previousSample = exactTimeService.GetCurrentLocalDateTime();
-        DateTime? nextOccurrence = settings.IsEnabled ? GetNextOccurrence(previousSample) : null;
+        AutoShutdownOccurrence? nextOccurrence = settings.IsEnabled ? GetNextOccurrence(previousSample) : null;
         PublishNext(nextOccurrence);
 
         try
@@ -43,7 +44,9 @@ public sealed class AutoShutdownSchedulerService(
                     else
                     {
                         nextOccurrence = GetNextOccurrence(now);
-                        PublishStatus("设置已保存，关机计划已更新。");
+                        PublishStatus(nextOccurrence is null
+                            ? "当前没有启用的关机计划，新增或开启计划后才会执行。"
+                            : "设置已保存，关机计划已更新。");
                     }
                     previousSample = now;
                     PublishNext(nextOccurrence);
@@ -57,11 +60,16 @@ public sealed class AutoShutdownSchedulerService(
                     continue;
                 }
                 nextOccurrence ??= GetNextOccurrence(now);
+                if (nextOccurrence is null)
+                {
+                    previousSample = now;
+                    continue;
+                }
 
                 var crossing = DailyScheduleCalculator.EvaluateCrossing(
                     previousSample,
                     now,
-                    nextOccurrence.Value,
+                    nextOccurrence.OccursAt,
                     MaximumContinuousGap);
                 previousSample = now;
                 switch (crossing)
@@ -76,25 +84,26 @@ public sealed class AutoShutdownSchedulerService(
                     case ScheduleCrossingResult.Skip:
                     {
                         var skippedOccurrence = DailyScheduleCalculator.GetLatestOccurrenceAtOrBefore(
-                            now,
-                            settings.ShutdownTime);
-                        stateStore.MarkHandled(skippedOccurrence, "Skipped");
+                                                    now,
+                                                    settings.GetEnabledScheduleSnapshot())
+                                                ?? nextOccurrence;
+                        stateStore.MarkHandled(skippedOccurrence.OccursAt, "Skipped");
                         nextOccurrence = GetNextOccurrence(now);
                         PublishNext(nextOccurrence);
-                        PublishStatus($"已跳过错过的关机计划（{skippedOccurrence:MM-dd HH:mm}）。");
+                        PublishStatus($"已跳过休眠或离线期间错过的关机计划，截至“{skippedOccurrence.ScheduleName}”（{skippedOccurrence.OccursAt:MM-dd HH:mm}）。");
                         continue;
                     }
                     case ScheduleCrossingResult.Trigger:
                     {
-                        var occurrence = nextOccurrence.Value;
-                        stateStore.MarkHandled(occurrence, "Triggered");
-                        nextOccurrence = occurrence.AddDays(1);
+                        var occurrence = nextOccurrence;
+                        stateStore.MarkHandled(occurrence.OccursAt, "Triggered");
+                        nextOccurrence = GetNextOccurrence(occurrence.OccursAt);
                         PublishNext(nextOccurrence);
-                        PublishStatus("关机倒计时正在显示，点击任意屏幕可取消本次关机。");
+                        PublishStatus($"“{occurrence.ScheduleName}”关机倒计时正在显示，点击任意屏幕可取消本次关机。");
                         var outcome = await countdownCoordinator.RunScheduledAsync(
                             settings.CountdownSeconds,
                             stoppingToken);
-                        stateStore.MarkHandled(occurrence, outcome.ToString());
+                        stateStore.MarkHandled(occurrence.OccursAt, outcome.ToString());
                         PublishStatus(FormatOutcome(outcome));
                         previousSample = exactTimeService.GetCurrentLocalDateTime();
                         continue;
@@ -128,13 +137,13 @@ public sealed class AutoShutdownSchedulerService(
         }
     }
 
-    private DateTime GetNextOccurrence(DateTime now) =>
-        DailyScheduleCalculator.GetNextUnprocessedOccurrence(
+    private AutoShutdownOccurrence? GetNextOccurrence(DateTime now) =>
+        DailyScheduleCalculator.GetNextOccurrence(
             now,
-            settings.ShutdownTime,
+            settings.GetEnabledScheduleSnapshot(),
             stateStore.LastHandledOccurrence);
 
-    private void PublishNext(DateTime? occurrence) =>
+    private void PublishNext(AutoShutdownOccurrence? occurrence) =>
         PublishOnUiThread(() => settings.UpdateNextOccurrence(occurrence));
 
     private void PublishStatus(string status) =>
@@ -154,7 +163,7 @@ public sealed class AutoShutdownSchedulerService(
 
     private static string FormatOutcome(CountdownOutcome outcome) => outcome switch
     {
-        CountdownOutcome.Cancelled => "本次关机已取消，明天仍会按计划执行。",
+        CountdownOutcome.Cancelled => "本次关机已取消，后续计划仍会按设置执行。",
         CountdownOutcome.ShutdownStarted => "已向 Windows 提交正常关机请求。",
         CountdownOutcome.PresentationFailed => "倒计时窗口未能覆盖全部屏幕，本次关机已安全取消。",
         CountdownOutcome.ShutdownFailed => "Windows 关机命令执行失败，本次不会自动重试。",
