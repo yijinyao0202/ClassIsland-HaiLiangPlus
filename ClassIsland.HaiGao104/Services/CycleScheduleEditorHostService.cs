@@ -1,4 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ClassIsland.Core;
@@ -16,6 +19,8 @@ public sealed class CycleScheduleEditorHostService(
 {
     private readonly Dictionary<Control, CycleScheduleEditorControl> _editors = [];
     private readonly Dictionary<Window, RestDayOverrideControl> _restDayControls = [];
+    private IDisposable? _editorLoadedSubscription;
+    private Style? _originalEditorSuppressionStyle;
     private DispatcherTimer? _timer;
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -37,6 +42,11 @@ public sealed class CycleScheduleEditorHostService(
             return;
         }
 
+        settings.SettingsChanged += Settings_OnChanged;
+        UpdateOriginalEditorSuppressionStyle();
+        _editorLoadedSubscription = Control.LoadedEvent.AddClassHandler<Control>(
+            OriginalEditor_OnLoaded,
+            handledEventsToo: true);
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _timer.Tick += Timer_OnTick;
         _timer.Start();
@@ -45,19 +55,37 @@ public sealed class CycleScheduleEditorHostService(
 
     private void StopOnUiThread()
     {
+        settings.SettingsChanged -= Settings_OnChanged;
+        _editorLoadedSubscription?.Dispose();
+        _editorLoadedSubscription = null;
         if (_timer is not null)
         {
             _timer.Stop();
             _timer.Tick -= Timer_OnTick;
             _timer = null;
         }
+        RemoveOriginalEditorSuppressionStyle();
         RestoreInjectedControls();
     }
 
     private void Timer_OnTick(object? sender, EventArgs e) => ScanWindows();
 
+    private void Settings_OnChanged(object? sender, EventArgs e) =>
+        Dispatcher.UIThread.Post(ScanWindows, DispatcherPriority.Send);
+
+    private void OriginalEditor_OnLoaded(Control control, RoutedEventArgs e)
+    {
+        if (!settings.HasCompletedOnboarding || !IsOriginalEditor(control))
+        {
+            return;
+        }
+
+        EnsureEditor(control);
+    }
+
     private void ScanWindows()
     {
+        UpdateOriginalEditorSuppressionStyle();
         CleanupClosedEditors();
         if (!settings.HasCompletedOnboarding)
         {
@@ -83,35 +111,87 @@ public sealed class CycleScheduleEditorHostService(
 
             var originalEditor = window.GetVisualDescendants()
                 .OfType<Control>()
-                .FirstOrDefault(control =>
-                    control.Name == "ScheduleDataGrid" &&
-                    control.GetType().FullName == "ClassIsland.Controls.ScheduleDataGrid.ScheduleDataGrid");
+                .FirstOrDefault(IsOriginalEditor);
             if (originalEditor is null)
             {
                 continue;
             }
 
-            if (_editors.TryGetValue(originalEditor, out var existingEditor))
-            {
-                existingEditor.RefreshIfChanged();
-                continue;
-            }
-
-            if (originalEditor.Parent is not Grid parent)
-            {
-                continue;
-            }
-
-            var editor = new CycleScheduleEditorControl(settings, cyclePlanService, scheduleBridge, exactTimeService);
-            Grid.SetRow(editor, Grid.GetRow(originalEditor));
-            Grid.SetColumn(editor, Grid.GetColumn(originalEditor));
-            Grid.SetRowSpan(editor, Grid.GetRowSpan(originalEditor));
-            Grid.SetColumnSpan(editor, Grid.GetColumnSpan(originalEditor));
-            parent.Children.Add(editor);
-            originalEditor.IsVisible = false;
-            _editors.Add(originalEditor, editor);
+            EnsureEditor(originalEditor);
         }
     }
+
+    private void EnsureEditor(Control originalEditor)
+    {
+        if (_editors.TryGetValue(originalEditor, out var existingEditor))
+        {
+            existingEditor.RefreshIfChanged();
+            return;
+        }
+
+        if (originalEditor.Parent is not Grid parent)
+        {
+            return;
+        }
+
+        var editor = new CycleScheduleEditorControl(settings, cyclePlanService, scheduleBridge, exactTimeService);
+        Grid.SetRow(editor, Grid.GetRow(originalEditor));
+        Grid.SetColumn(editor, Grid.GetColumn(originalEditor));
+        Grid.SetRowSpan(editor, Grid.GetRowSpan(originalEditor));
+        Grid.SetColumnSpan(editor, Grid.GetColumnSpan(originalEditor));
+        parent.Children.Add(editor);
+        originalEditor.IsVisible = false;
+        _editors.Add(originalEditor, editor);
+    }
+
+    private void UpdateOriginalEditorSuppressionStyle()
+    {
+        if (!settings.HasCompletedOnboarding)
+        {
+            RemoveOriginalEditorSuppressionStyle();
+            return;
+        }
+
+        if (_originalEditorSuppressionStyle is not null)
+        {
+            return;
+        }
+
+        var originalEditorType = Type.GetType(
+            "ClassIsland.Controls.ScheduleDataGrid.ScheduleDataGrid, ClassIsland",
+            throwOnError: false);
+        if (originalEditorType is null)
+        {
+            return;
+        }
+
+        _originalEditorSuppressionStyle = new Style
+        {
+            Selector = Selectors.Name(
+                Selectors.Is(null, originalEditorType),
+                "ScheduleDataGrid"),
+            Setters =
+            {
+                new Setter(Visual.IsVisibleProperty, false)
+            }
+        };
+        AppBase.Current.Styles.Add(_originalEditorSuppressionStyle);
+    }
+
+    private void RemoveOriginalEditorSuppressionStyle()
+    {
+        if (_originalEditorSuppressionStyle is null)
+        {
+            return;
+        }
+
+        AppBase.Current.Styles.Remove(_originalEditorSuppressionStyle);
+        _originalEditorSuppressionStyle = null;
+    }
+
+    private static bool IsOriginalEditor(Control control) =>
+        control.Name == "ScheduleDataGrid" &&
+        control.GetType().FullName == "ClassIsland.Controls.ScheduleDataGrid.ScheduleDataGrid";
 
     private void CleanupClosedEditors()
     {
