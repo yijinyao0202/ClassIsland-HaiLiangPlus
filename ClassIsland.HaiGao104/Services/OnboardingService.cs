@@ -62,6 +62,14 @@ public sealed class OnboardingService(
                     {
                         IsOpen = true,
                         IsClosable = false,
+                        Severity = InfoBarSeverity.Informational,
+                        Title = "非官方个人项目",
+                        Message = "海亮教育+并非由海亮教育集团或其关联学校开发、发布或维护。本插件由个人开发者“伊烬遥”独立开发，与海亮教育官方无隶属或授权关系。"
+                    },
+                    new InfoBar
+                    {
+                        IsOpen = true,
+                        IsClosable = false,
                         Severity = InfoBarSeverity.Warning,
                         Title = "重要：会覆盖 ClassIsland 原软件课表",
                         Message = "启用后，海亮教育+将完全接管每天加载哪份课表，并以多周周期结果覆盖 ClassIsland 原本的每日课表选择。原有课表内容不会被删除；暂停海亮教育+后会恢复接管前的课表状态。"

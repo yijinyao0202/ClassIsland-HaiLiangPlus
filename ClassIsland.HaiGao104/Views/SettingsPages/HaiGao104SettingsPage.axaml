@@ -24,6 +24,10 @@
         </Grid>
       </Border>
 
+      <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
+                        Title="非官方个人项目"
+                        Message="海亮教育+并非由海亮教育集团或其关联学校开发、发布或维护。本插件由个人开发者“伊烬遥”独立开发，与海亮教育官方无隶属或授权关系。" />
+
       <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
                         Title="警告：海亮教育+会覆盖 ClassIsland 原软件课表"
                         Message="启用完全接管后，每天使用哪份课表将以海亮教育+的多周周期为准。原有课表内容不会被删除；暂停海亮教育+会恢复接管前的课表状态。">
