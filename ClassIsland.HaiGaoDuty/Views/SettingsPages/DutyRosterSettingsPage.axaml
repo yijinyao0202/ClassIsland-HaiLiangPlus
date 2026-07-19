@@ -17,7 +17,7 @@
         <Grid ColumnDefinitions="*,Auto"
               ColumnSpacing="24">
           <StackPanel Spacing="5">
-            <TextBlock Text="适用于海亮教育"
+            <TextBlock Text="HL Education +"
                        FontSize="13"
                        Opacity="0.68" />
             <TextBlock Text="大周值日生"
@@ -187,7 +187,7 @@
         </Border>
       </Grid>
 
-      <TextBlock Text="值日生已集成进海亮教育+；暂停课表完全接管时不会推进或提醒，恢复后也不会补排暂停日期。"
+      <TextBlock Text="值日生已集成进 HL Education +；暂停课表完全接管时不会推进或提醒，恢复后也不会补排暂停日期。"
                  TextWrapping="Wrap"
                  Opacity="0.62" />
     </StackPanel>

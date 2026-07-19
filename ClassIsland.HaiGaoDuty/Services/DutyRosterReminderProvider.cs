@@ -8,7 +8,7 @@ namespace ClassIsland.HaiGaoDuty.Services;
 
 [NotificationProviderInfo(
     "E48E2F23-AC08-4D16-B0E3-3C7A14318E65",
-    "海亮教育+值日生提醒",
+    "HL Education + 值日生提醒",
     "\ue0ba",
     "在设定时间提醒当天值日生，每个上课日最多提醒一次。")]
 public sealed class DutyRosterReminderProvider : NotificationProviderBase
@@ -53,7 +53,7 @@ public sealed class DutyRosterReminderProvider : NotificationProviderBase
         catch (Exception exception)
         {
             _service.ReleaseReminderReservation(now.Date);
-            _logger.LogError(exception, "显示海亮教育+值日生提醒失败，将在下一次计时器刷新时重试。");
+            _logger.LogError(exception, "显示 HL Education + 值日生提醒失败，将在下一次计时器刷新时重试。");
         }
     }
 }

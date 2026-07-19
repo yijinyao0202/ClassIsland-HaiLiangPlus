@@ -7,7 +7,7 @@ namespace ClassIsland.HaiGao104.Services;
 
 [NotificationProviderInfo(
     "97A32193-B15C-467A-99C4-CB2160809F24",
-    "海亮教育+轮换提醒",
+    "HL Education + 轮换提醒",
     "\ue112",
     "按用户自定义规则提醒整个班级执行哪一个批次，不修改课表或时间表。")]
 public sealed class RotationReminderProvider : NotificationProviderBase

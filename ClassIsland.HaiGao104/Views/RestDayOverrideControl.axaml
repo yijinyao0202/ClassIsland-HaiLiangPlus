@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <StackPanel Spacing="8">
     <Separator Margin="0 16 0 4" />
-    <TextBlock Text="海亮教育+休息日处理" FontWeight="SemiBold" />
+    <TextBlock Text="HL Education + 休息日处理" FontWeight="SemiBold" />
     <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Opacity="0.75" />
 
     <StackPanel IsVisible="{Binding ShowRestActions}" Spacing="6">

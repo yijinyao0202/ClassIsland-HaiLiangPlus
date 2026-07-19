@@ -6,7 +6,7 @@ using ClassIsland.Shared;
 
 namespace ClassIsland.HaiGaoAutoShutdown.Views.SettingsPages;
 
-[SettingsPageInfo("cn.haigao.auto-shutdown.settings", "海高定时关机")]
+[SettingsPageInfo("cn.haigao.auto-shutdown.settings", "HL Education + 定时关机")]
 public partial class AutoShutdownSettingsPage : SettingsPageBase
 {
     public AutoShutdownSettingsService Settings { get; }

@@ -1,11 +1,11 @@
 id: cn.haigao.duty-roster
-name: 适用于海亮教育的大周值日生
-description: 依照海高自定义循环作息的上课日，按不重复周期安排并提醒每日值日生。
+name: HL Education + 大周值日生
+description: 依照自定义循环作息的上课日，按不重复周期安排并提醒每日值日生。
 entranceAssembly: "ClassIsland.HaiGaoDuty.dll"
 url: https://github.com/ClassIsland/ClassIsland
 apiVersion: 2.0.0.0
 version: 1.0.0.0
-author: 海高
+author: 伊烬遥
 icon: icon.png
 dependencies:
   - id: cn.haigao.schedule104

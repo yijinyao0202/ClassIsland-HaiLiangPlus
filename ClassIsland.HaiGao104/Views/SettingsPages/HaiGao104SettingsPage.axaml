@@ -11,7 +11,7 @@
       <Border Padding="20" CornerRadius="10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
           <StackPanel Spacing="6">
-            <TextBlock Text="海亮教育+" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="HL Education +" FontSize="22" FontWeight="SemiBold" />
             <TextBlock Text="管理长周期课程，并按班级批次自动加载不同的时间表。"
                        TextWrapping="Wrap" Opacity="0.72" />
           </StackPanel>
@@ -26,11 +26,11 @@
 
       <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Informational"
                         Title="非官方个人项目"
-                        Message="海亮教育+并非由海亮教育集团或其关联学校开发、发布或维护。本插件由个人开发者“伊烬遥”独立开发，与海亮教育官方无隶属或授权关系。" />
+                        Message="HL Education + 由个人开发者“伊烬遥”独立开发，不代表任何学校、教育集团或其他机构，亦不存在隶属、授权或合作关系。" />
 
       <controls:InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
-                        Title="警告：海亮教育+会覆盖 ClassIsland 原软件课表"
-                        Message="启用完全接管后，每天使用哪份课表将以海亮教育+的多周周期为准。原有课表内容不会被删除；暂停海亮教育+会恢复接管前的课表状态。">
+                        Title="警告：HL Education + 会覆盖 ClassIsland 原软件课表"
+                        Message="启用完全接管后，每天使用哪份课表将以 HL Education + 的多周周期为准。原有课表内容不会被删除；暂停 HL Education + 会恢复接管前的课表状态。">
         <controls:InfoBar.ActionButton>
           <Button Content="查看新手引导" Click="ShowOnboarding_OnClick" />
         </controls:InfoBar.ActionButton>

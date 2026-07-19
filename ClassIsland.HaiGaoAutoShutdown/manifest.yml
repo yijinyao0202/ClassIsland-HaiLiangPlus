@@ -1,9 +1,9 @@
 id: cn.haigao.auto-shutdown
-name: 海高定时关机
+name: HL Education + 定时关机
 description: 每天在指定时间显示可点击取消的多屏倒计时，并在倒计时结束后正常关闭 Windows。
 entranceAssembly: "ClassIsland.HaiGaoAutoShutdown.dll"
 apiVersion: 2.0.0.0
 version: 1.0.0.0
-author: 海高
+author: 伊烬遥
 icon: icon.png
 supportedOSPlatforms: [Windows]

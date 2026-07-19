@@ -61,7 +61,7 @@ public sealed class RestDayPromptService(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "等待主窗口显示海亮教育+休息日询问时发生错误。");
+            logger.LogError(exception, "等待主窗口显示 HL Education + 休息日询问时发生错误。");
         }
     }
 
@@ -76,7 +76,7 @@ public sealed class RestDayPromptService(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "显示海亮教育+休息日询问失败。");
+            logger.LogError(exception, "显示 HL Education + 休息日询问失败。");
         }
     }
 
@@ -136,7 +136,7 @@ public sealed class RestDayPromptService(
             DefaultButton = ContentDialogButton.None
         });
 
-        logger.LogInformation("海亮教育+休息日询问已关闭，结果：{Result}", result);
+        logger.LogInformation("HL Education + 休息日询问已关闭，结果：{Result}", result);
 
         if (result == ContentDialogResult.Primary)
         {

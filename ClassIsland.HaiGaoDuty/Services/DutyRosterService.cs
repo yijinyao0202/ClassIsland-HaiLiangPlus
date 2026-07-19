@@ -498,14 +498,14 @@ public sealed class DutyRosterService : INotifyPropertyChanged, IHostedService
         if (_cycleCalendar is null)
         {
             TodayDisplay = "依赖服务不可用";
-            TodayStatus = "海亮教育+内部周期服务尚未就绪，请重新启用插件或重启 ClassIsland。";
+            TodayStatus = "HL Education + 内部周期服务尚未就绪，请重新启用插件或重启 ClassIsland。";
             UpdateDerivedStatus();
             return;
         }
 
         if (!_cycleCalendar.IsCycleActive)
         {
-            TodayDisplay = "海亮教育+课表已暂停";
+            TodayDisplay = "HL Education + 课表已暂停";
             TodayStatus = "值日生不会推进或提醒；恢复完全接管后从当天继续。";
             UpdateDerivedStatus();
             return;
@@ -538,7 +538,7 @@ public sealed class DutyRosterService : INotifyPropertyChanged, IHostedService
         if (_state.ActiveConfiguration is null)
         {
             TodayDisplay = "未配置值日生";
-            TodayStatus = "请在“适用于海亮教育的大周值日生”设置页录入名单。";
+            TodayStatus = "请在“大周值日生”设置页录入名单。";
             UpdateDerivedStatus();
             return;
         }
@@ -629,7 +629,7 @@ public sealed class DutyRosterService : INotifyPropertyChanged, IHostedService
         }
         catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
         {
-            _logger.LogError(exception, "无法读取海高值日生配置，将保留损坏文件并使用默认配置。");
+            _logger.LogError(exception, "无法读取 HL Education + 值日生配置，将保留损坏文件并使用默认配置。");
             TryPreserveCorruptedSettings();
             return new DutyRosterPersistentState();
         }
@@ -711,7 +711,7 @@ public sealed class DutyRosterService : INotifyPropertyChanged, IHostedService
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            _logger.LogError(exception, "无法保存海高值日生配置。");
+            _logger.LogError(exception, "无法保存 HL Education + 值日生配置。");
             return false;
         }
     }
@@ -725,7 +725,7 @@ public sealed class DutyRosterService : INotifyPropertyChanged, IHostedService
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            _logger.LogWarning(exception, "无法备份损坏的海高值日生配置。");
+            _logger.LogWarning(exception, "无法备份损坏的 HL Education + 值日生配置。");
         }
     }
 

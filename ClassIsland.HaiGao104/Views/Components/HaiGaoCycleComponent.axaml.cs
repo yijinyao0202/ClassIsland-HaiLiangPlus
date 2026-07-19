@@ -8,7 +8,7 @@ namespace ClassIsland.HaiGao104.Views.Components;
 
 [ComponentInfo(
     "B523A911-8C11-4D55-90F8-02AEAC7D10A4",
-    "海亮教育+",
+    "HL Education +",
     "\ue304",
     "显示今天对应的周次、周期位置或休息状态。")]
 public sealed partial class HaiGaoCycleComponent : ComponentBase
@@ -75,7 +75,7 @@ public sealed partial class HaiGaoCycleComponent : ComponentBase
     {
         if (!_settings.IsEnabled)
         {
-            DisplayText = "海亮教育+已暂停";
+            DisplayText = "HL Education + 已暂停";
             return;
         }
 

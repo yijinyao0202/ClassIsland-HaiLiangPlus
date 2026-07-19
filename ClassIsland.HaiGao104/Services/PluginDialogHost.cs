@@ -20,7 +20,7 @@ internal static class PluginDialogHost
 
         var host = new Window
         {
-            Title = dialog.Title?.ToString() ?? "海亮教育+",
+            Title = dialog.Title?.ToString() ?? "HL Education +",
             Width = 760,
             Height = 700,
             MinWidth = 560,

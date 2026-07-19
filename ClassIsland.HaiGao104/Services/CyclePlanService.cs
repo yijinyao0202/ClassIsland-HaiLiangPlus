@@ -10,7 +10,7 @@ public sealed class CyclePlanService(
     IScheduleControlBridge scheduleBridge,
     IExactTimeService exactTimeService)
 {
-    private const string ManagedTimeLayoutName = "海亮教育+基础时间表";
+    private const string ManagedTimeLayoutName = "HL Education + 基础时间表";
     private bool _isEnsuring;
 
     public IReadOnlyList<Guid> EnsureManagedSchedules()
@@ -313,7 +313,7 @@ public sealed class CyclePlanService(
     }
 
     private Guid GetManagedTimeLayoutId() => settings.ManagedTimeLayoutId
-        ?? throw new InvalidOperationException("海高托管时间表尚未创建。");
+        ?? throw new InvalidOperationException("HL Education + 托管时间表尚未创建。");
 
     private ClassPlan? FindSourcePlan(Profile profile, IReadOnlyList<ArchivedCyclePlan> archivedPlans)
     {
@@ -346,8 +346,13 @@ public sealed class CyclePlanService(
         ref bool changed)
     {
         if (settings.ManagedTimeLayoutId is { } configuredTimeLayoutId &&
-            profile.TimeLayouts.ContainsKey(configuredTimeLayoutId))
+            profile.TimeLayouts.TryGetValue(configuredTimeLayoutId, out var configuredTimeLayout))
         {
+            if (configuredTimeLayout.Name is "海高托管时间表" or "海亮教育+基础时间表")
+            {
+                configuredTimeLayout.Name = ManagedTimeLayoutName;
+                changed = true;
+            }
             return configuredTimeLayoutId;
         }
 
@@ -389,9 +394,10 @@ public sealed class CyclePlanService(
                 profile.TimeLayouts.TryGetValue(configuredId, out var configuredLayout))
             {
                 var legacyName = $"海亮周 - {batchName}时间表";
-                if (configuredLayout.Name == legacyName)
+                var previousName = $"海亮教育+ - {batchName}时间表";
+                if (configuredLayout.Name == legacyName || configuredLayout.Name == previousName)
                 {
-                    configuredLayout.Name = $"海亮教育+ - {batchName}时间表";
+                    configuredLayout.Name = $"HL Education + - {batchName}时间表";
                     changed = true;
                 }
                 continue;

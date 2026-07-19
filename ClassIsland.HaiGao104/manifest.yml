@@ -1,6 +1,6 @@
 ﻿id: cn.haigao.schedule104
-name: 海亮教育+
-description: 完全接管每日课表，并集成长周期、班级时间表轮换、休息日处理、定时关机和值日生。
+name: HL Education +
+description: 适用于 10+4、长周期轮换等非标准校园作息，并集成班级时间表轮换、休息日处理、定时关机和值日生。
 entranceAssembly: "ClassIsland.HaiGao104.dll"
 url: https://github.com/yijinyao0202/ClassIsland-HaiLiangPlus
 apiVersion: 2.0.0.0

@@ -12,7 +12,7 @@
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
           <StackPanel Spacing="6">
-            <TextBlock Text="海高定时关机" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock Text="HL Education + 定时关机" FontSize="22" FontWeight="SemiBold" />
             <TextBlock Text="每天在指定时间显示覆盖所有屏幕的可取消倒计时。"
                        TextWrapping="Wrap"
                        Opacity="0.72" />

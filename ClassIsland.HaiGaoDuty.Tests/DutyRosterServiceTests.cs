@@ -131,7 +131,7 @@ public sealed class DutyRosterServiceTests
             Assert.Equal(new DateTime(2026, 7, 21), pausedState.LastProcessedDate);
             Assert.Equal(1, pausedState.CurrentOrderCursor);
             Assert.Equal(new DateTime(2026, 7, 18), pausedState.AssignmentDate);
-            Assert.Equal("海亮教育+课表已暂停", service.TodayDisplay);
+            Assert.Equal("HL Education + 课表已暂停", service.TodayDisplay);
 
             calendar.IsCycleActive = true;
             service.Refresh(new DateTime(2026, 7, 21, 7, 1, 0));

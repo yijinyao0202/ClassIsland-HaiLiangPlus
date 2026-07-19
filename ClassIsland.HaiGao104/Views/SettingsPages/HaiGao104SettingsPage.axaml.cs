@@ -10,7 +10,7 @@ using ClassIsland.Shared.Models.Profile;
 
 namespace ClassIsland.HaiGao104.Views.SettingsPages;
 
-[SettingsPageInfo("cn.haigao.schedule104.settings", "海亮教育+")]
+[SettingsPageInfo("cn.haigao.schedule104.settings", "HL Education +")]
 public partial class HaiGao104SettingsPage : SettingsPageBase
 {
     private bool _isUpdatingTimeLayoutSelection;

@@ -16,7 +16,7 @@
       <DockPanel LastChildFill="True">
         <Button DockPanel.Dock="Right" Content="刷新" Click="Refresh_OnClick" Margin="12 0 0 0" />
         <StackPanel Spacing="3">
-          <TextBlock Text="海亮教育+课表" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Text="HL Education + 课表" FontSize="16" FontWeight="SemiBold" />
           <TextBlock Text="{Binding SummaryText}" TextWrapping="Wrap" Opacity="0.72" />
         </StackPanel>
       </DockPanel>
@@ -43,7 +43,7 @@
             </ComboBox.ItemTemplate>
           </ComboBox>
         </Grid>
-        <TextBlock Text="直接选择“时间表”页中已有的时间表；不会复制、改名或删除。这里决定周一至周 N 课程格使用哪些上课时间点；不同班级批次仍可在海亮教育+设置中分别绑定时间表。"
+        <TextBlock Text="直接选择“时间表”页中已有的时间表；不会复制、改名或删除。这里决定周一至周 N 课程格使用哪些上课时间点；不同班级批次仍可在 HL Education + 设置中分别绑定时间表。"
                    TextWrapping="Wrap" FontSize="12" Opacity="0.72" />
         <Grid ColumnDefinitions="Auto,130,Auto,Auto,*" ColumnSpacing="8">
           <TextBlock Text="今天是" VerticalAlignment="Center" />
