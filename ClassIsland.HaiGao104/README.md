@@ -1,6 +1,6 @@
 # HL Education +
 
-用于完全接管 ClassIsland 的每日课表选择，并按自定义上课、休息周期运行。当前版本为 `2.1.0.0`，课表、定时关机和值日生只需安装一个 `.cipx`。
+用于完全接管 ClassIsland 的每日课表选择，并按自定义上课、休息周期运行。当前版本为 `2.1.0.1`，课表、定时关机和值日生只需安装一个 `.cipx`。
 
 ## 免责声明
 
@@ -9,6 +9,11 @@
 ## 下载与安装
 
 从 [GitHub Releases](https://github.com/yijinyao0202/ClassIsland-HaiLiangPlus/releases/latest) 下载 `ClassIsland.HaiGao104.cipx`，在 ClassIsland 的“应用设置 → 插件”中安装并重启软件。
+
+### 2.1.0.1 修复
+
+- 修复进入课表编辑页时，ClassIsland 原课表会先短暂显示、随后才切换为多周课表的问题。
+- 原编辑器现在会在首帧前隐藏，并在控件加载时立即注入多周编辑器，不再等待 400ms 轮询。
 
 ### 2.1.0.0 更新
 
