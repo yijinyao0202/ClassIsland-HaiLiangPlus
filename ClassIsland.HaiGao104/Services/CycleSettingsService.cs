@@ -441,7 +441,7 @@ public sealed class CycleSettingsService : INotifyPropertyChanged, ICycleCalenda
         var suggestedTime = RotationSteps.Count == 0
             ? RoundUpToFiveMinutes(DateTime.Now.TimeOfDay)
             : NormalizeTime(RotationSteps[RotationSteps.Count - 1].Time.Add(TimeSpan.FromMinutes(5)));
-        RotationSteps.Add(new RotationStep(GetDefaultBatchName(nextNumber), suggestedTime));
+        RotationSteps.Add(new RotationStep(GetDefaultBatchName(nextNumber), suggestedTime, ManagedTimeLayoutId));
     }
 
     public void RemoveRotationStep(RotationStep step) => RotationSteps.Remove(step);

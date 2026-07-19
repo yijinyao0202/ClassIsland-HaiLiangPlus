@@ -114,6 +114,27 @@ public sealed class CyclePlanService(
         }
     }
 
+    public Guid? DuplicateRotationTimeLayout(RotationStep step)
+    {
+        EnsureManagedSchedules();
+        var profile = scheduleBridge.Profile;
+        var sourceId = step.TimeLayoutId ?? settings.ManagedTimeLayoutId;
+        if (sourceId is not { } validSourceId ||
+            !profile.TimeLayouts.TryGetValue(validSourceId, out var sourceLayout))
+        {
+            return null;
+        }
+
+        var duplicatedLayout = Duplicate(sourceLayout);
+        var batchName = string.IsNullOrWhiteSpace(step.Name) ? "班级批次" : step.Name.Trim();
+        duplicatedLayout.Name = GetUniqueTimeLayoutName(profile, $"{batchName}时间表");
+        var duplicatedLayoutId = Guid.NewGuid();
+        profile.TimeLayouts.Add(duplicatedLayoutId, duplicatedLayout);
+        step.TimeLayoutId = duplicatedLayoutId;
+        scheduleBridge.SaveProfile();
+        return duplicatedLayoutId;
+    }
+
     public bool InsertDay(int insertIndex)
     {
         var managedIds = EnsureManagedSchedules().ToList();
@@ -352,18 +373,7 @@ public sealed class CyclePlanService(
                 continue;
             }
 
-            if (index == 0)
-            {
-                step.TimeLayoutId = baseTimeLayoutId;
-                continue;
-            }
-
-            var duplicatedLayout = Duplicate(baseTimeLayout);
-            duplicatedLayout.Name = $"海亮教育+ - {batchName}时间表";
-            var duplicatedLayoutId = Guid.NewGuid();
-            profile.TimeLayouts.Add(duplicatedLayoutId, duplicatedLayout);
-            step.TimeLayoutId = duplicatedLayoutId;
-            changed = true;
+            step.TimeLayoutId = baseTimeLayoutId;
         }
 
         if (!settings.IsRotationEnabled)
@@ -387,6 +397,26 @@ public sealed class CyclePlanService(
             changed = true;
         }
         return changed;
+    }
+
+    private static string GetUniqueTimeLayoutName(Profile profile, string baseName)
+    {
+        var existingNames = profile.TimeLayouts.Values
+            .Select(timeLayout => timeLayout.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!existingNames.Contains(baseName))
+        {
+            return baseName;
+        }
+
+        for (var number = 2; ; number++)
+        {
+            var candidate = $"{baseName} ({number})";
+            if (!existingNames.Contains(candidate))
+            {
+                return candidate;
+            }
+        }
     }
 
     private static bool ConfigureManagedPlan(ClassPlan plan, int dayNumber, Guid timeLayoutId)

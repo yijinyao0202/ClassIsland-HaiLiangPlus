@@ -6,13 +6,18 @@ using ClassIsland.Core.Attributes;
 using ClassIsland.HaiGaoAutoShutdown.Services;
 using ClassIsland.HaiGao104.Services;
 using ClassIsland.Shared;
+using ClassIsland.Shared.Models.Profile;
 
 namespace ClassIsland.HaiGao104.Views.SettingsPages;
 
 [SettingsPageInfo("cn.haigao.schedule104.settings", "海亮教育+")]
 public partial class HaiGao104SettingsPage : SettingsPageBase
 {
+    private bool _isUpdatingTimeLayoutSelection;
+
     private readonly OnboardingService _onboardingService;
+
+    private readonly CyclePlanService _cyclePlanService;
 
     private readonly CountdownCoordinator _autoShutdownCountdownCoordinator;
 
@@ -26,6 +31,7 @@ public partial class HaiGao104SettingsPage : SettingsPageBase
         IAppHost.GetService<CycleSettingsService>(),
         IAppHost.GetService<IProfileService>(),
         IAppHost.GetService<OnboardingService>(),
+        IAppHost.GetService<CyclePlanService>(),
         IAppHost.GetService<AutoShutdownSettingsService>(),
         IAppHost.GetService<CountdownCoordinator>())
     {
@@ -35,12 +41,14 @@ public partial class HaiGao104SettingsPage : SettingsPageBase
         CycleSettingsService settings,
         IProfileService profileService,
         OnboardingService onboardingService,
+        CyclePlanService cyclePlanService,
         AutoShutdownSettingsService autoShutdownSettings,
         CountdownCoordinator autoShutdownCountdownCoordinator)
     {
         Settings = settings;
         ProfileService = profileService;
         _onboardingService = onboardingService;
+        _cyclePlanService = cyclePlanService;
         AutoShutdownSettings = autoShutdownSettings;
         _autoShutdownCountdownCoordinator = autoShutdownCountdownCoordinator;
         InitializeComponent();
@@ -102,6 +110,61 @@ public partial class HaiGao104SettingsPage : SettingsPageBase
         if (sender is Button { DataContext: RotationStep step })
         {
             Settings.RemoveRotationStep(step);
+        }
+    }
+
+    private void DuplicateRotationTimeLayout_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: RotationStep step } button &&
+            _cyclePlanService.DuplicateRotationTimeLayout(step) is { } duplicatedId &&
+            button.Parent is Panel panel)
+        {
+            var comboBox = panel.Children.OfType<ComboBox>().FirstOrDefault();
+            SelectTimeLayout(comboBox, duplicatedId);
+        }
+    }
+
+    private void TimeLayoutComboBox_OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (sender is ComboBox { DataContext: RotationStep step } comboBox)
+        {
+            SelectTimeLayout(comboBox, step.TimeLayoutId);
+        }
+    }
+
+    private void TimeLayoutComboBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_isUpdatingTimeLayoutSelection ||
+            sender is not ComboBox
+            {
+                DataContext: RotationStep step,
+                SelectedItem: KeyValuePair<Guid, TimeLayout> selectedTimeLayout
+            })
+        {
+            return;
+        }
+
+        step.TimeLayoutId = selectedTimeLayout.Key;
+    }
+
+    private void SelectTimeLayout(ComboBox? comboBox, Guid? timeLayoutId)
+    {
+        if (comboBox is null)
+        {
+            return;
+        }
+
+        _isUpdatingTimeLayoutSelection = true;
+        try
+        {
+            comboBox.SelectedItem = timeLayoutId is { } id &&
+                                    ProfileService.Profile.TimeLayouts.TryGetValue(id, out var timeLayout)
+                ? new KeyValuePair<Guid, TimeLayout>(id, timeLayout)
+                : null;
+        }
+        finally
+        {
+            _isUpdatingTimeLayoutSelection = false;
         }
     }
 }

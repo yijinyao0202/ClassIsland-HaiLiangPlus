@@ -136,7 +136,7 @@
 
             <StackPanel Spacing="8">
               <TextBlock Text="2. 每个批次加载哪一份时间表" FontSize="16" FontWeight="SemiBold" />
-              <TextBlock Text="第一批和第二批共用同一套周一至周 N 课程，仅选择不同的时间表。可先复制基础时间表，再只修改就餐等时间线。"
+              <TextBlock Text="下拉框可直接选择 ClassIsland 中已有的任意时间表。添加批次只会绑定基础时间表，不会自动新建；需要副本时再手动复制。"
                          TextWrapping="Wrap" Opacity="0.72" />
               <ItemsControl ItemsSource="{Binding Settings.RotationSteps}">
                 <ItemsControl.ItemTemplate>
@@ -150,15 +150,18 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="5">
                           <TextBlock Text="加载的时间表" FontWeight="SemiBold" />
-                          <ComboBox ItemsSource="{Binding $parent[ItemsControl].DataContext.ProfileService.Profile.TimeLayouts.List}"
-                                    SelectedValue="{Binding TimeLayoutId, Mode=TwoWay}"
-                                    SelectedValueBinding="{Binding Key}" MinWidth="320">
+                          <ComboBox ItemsSource="{Binding $parent[ItemsControl].DataContext.ProfileService.Profile.TimeLayouts}"
+                                    Loaded="TimeLayoutComboBox_OnLoaded"
+                                    SelectionChanged="TimeLayoutComboBox_OnSelectionChanged"
+                                    MinWidth="320">
                             <ComboBox.ItemTemplate>
                               <DataTemplate>
                                 <TextBlock Text="{Binding Value.Name}" ToolTip.Tip="{Binding Key}" />
                               </DataTemplate>
                             </ComboBox.ItemTemplate>
                           </ComboBox>
+                          <Button Content="复制所选时间表" Click="DuplicateRotationTimeLayout_OnClick"
+                                  HorizontalAlignment="Left" />
                         </StackPanel>
                         <Button Grid.Column="2" Content="删除此批次" Click="RemoveRotationStep_OnClick"
                                 Margin="8 0 0 0" VerticalAlignment="Bottom" />
@@ -169,7 +172,7 @@
               </ItemsControl>
               <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Content="添加下一批" Click="AddRotationStep_OnClick" />
-                <Button Content="打开时间表编辑器" Click="OpenProfileEditor_OnClick" />
+                <Button Content="管理 ClassIsland 时间表" Click="OpenProfileEditor_OnClick" />
               </StackPanel>
             </StackPanel>
 
