@@ -24,8 +24,10 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     private bool _isEmpty = true;
     private bool _canAddDay = true;
     private bool _canRestoreArchive;
+    private bool _isRefreshingTimeLayoutSelection;
     private CycleDayHeader? _selectedTodayDay;
     private ArchivedCyclePlan? _selectedArchivedPlan;
+    private CycleTimeLayoutOption? _selectedTimeLayout;
 
     public CycleScheduleEditorControl() : this(
         IAppHost.GetService<CycleSettingsService>(),
@@ -55,6 +57,8 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
     public ObservableCollection<CycleDayHeader> DayHeaders { get; } = [];
 
     public ObservableCollection<ArchivedCyclePlan> ArchivedPlans { get; } = [];
+
+    public ObservableCollection<CycleTimeLayoutOption> TimeLayoutOptions { get; } = [];
 
     public ObservableCollection<CycleScheduleRow> Rows { get; } = [];
 
@@ -101,9 +105,30 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
         }
     }
 
+    public CycleTimeLayoutOption? SelectedTimeLayout
+    {
+        get => _selectedTimeLayout;
+        set => SetField(ref _selectedTimeLayout, value);
+    }
+
     public void RefreshIfChanged() => Refresh(false);
 
     private void Refresh_OnClick(object? sender, RoutedEventArgs e) => Refresh(true);
+
+    private void TimeLayout_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_isRefreshingTimeLayoutSelection ||
+            sender is not ComboBox { SelectedItem: CycleTimeLayoutOption selectedTimeLayout } ||
+            selectedTimeLayout.Id == _settings.ManagedTimeLayoutId)
+        {
+            return;
+        }
+
+        if (_cyclePlanService.SelectManagedTimeLayout(selectedTimeLayout.Id))
+        {
+            Refresh(true);
+        }
+    }
 
     private void SetToday_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -190,6 +215,7 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
 
         var profile = _scheduleBridge.Profile;
         var now = _exactTimeService.GetCurrentLocalDateTime();
+        RefreshTimeLayoutOptions(profile);
         int? currentWorkDayIndex = null;
         if (TemporaryClassPlanResolver.TryGetValid(profile, now, out var temporaryClassPlanId))
         {
@@ -234,7 +260,7 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
             ? "正在创建周期课表，请稍候刷新。"
             : $"共 {activePlanIds.Length} 个上课日：可在任意周前后插入、归档并原位恢复；周期最多 100 天。";
 
-        if (_settings.GetEffectiveTimeLayoutId(now) is not { } timeLayoutId ||
+        if (_settings.ManagedTimeLayoutId is not { } timeLayoutId ||
             !profile.TimeLayouts.TryGetValue(timeLayoutId, out var timeLayout))
         {
             IsEmpty = true;
@@ -295,6 +321,7 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
         var now = _exactTimeService.GetCurrentLocalDateTime();
         var effectiveTimeLayoutId = _settings.GetEffectiveTimeLayoutId(now);
         hash.Add(effectiveTimeLayoutId);
+        hash.Add(_settings.ManagedTimeLayoutId);
         hash.Add(_settings.RestRepeatStartDate);
         hash.Add(_settings.RestRepeatEndDate);
         hash.Add(_settings.RestRepeatStartDay);
@@ -312,9 +339,10 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
         {
             hash.Add(archive);
         }
-        if (effectiveTimeLayoutId is { } timeLayoutId &&
-            profile.TimeLayouts.TryGetValue(timeLayoutId, out var timeLayout))
+        foreach (var (timeLayoutId, timeLayout) in profile.TimeLayouts)
         {
+            hash.Add(timeLayoutId);
+            hash.Add(timeLayout.Name);
             foreach (var item in timeLayout.Layouts)
             {
                 hash.Add(item.TimeType);
@@ -329,6 +357,31 @@ public sealed partial class CycleScheduleEditorControl : UserControl, INotifyPro
         }
         hash.Add(_settings.GetCyclePosition(now));
         return hash.ToHashCode();
+    }
+
+    private void RefreshTimeLayoutOptions(Profile profile)
+    {
+        _isRefreshingTimeLayoutSelection = true;
+        try
+        {
+            var selectedTimeLayoutId = _settings.ManagedTimeLayoutId;
+            TimeLayoutOptions.Clear();
+            foreach (var (id, timeLayout) in profile.TimeLayouts.OrderBy(item => item.Value.Name))
+            {
+                var lessonCount = timeLayout.Layouts.Count(item => item.TimeType == 0);
+                TimeLayoutOptions.Add(new CycleTimeLayoutOption(
+                    id,
+                    string.IsNullOrWhiteSpace(timeLayout.Name) ? "（未命名时间表）" : timeLayout.Name,
+                    lessonCount));
+            }
+
+            SelectedTimeLayout = TimeLayoutOptions.FirstOrDefault(item => item.Id == selectedTimeLayoutId)
+                                 ?? TimeLayoutOptions.FirstOrDefault();
+        }
+        finally
+        {
+            _isRefreshingTimeLayoutSelection = false;
+        }
     }
 
     private void ObserveClassInfo(ClassInfo classInfo)
@@ -380,6 +433,11 @@ public sealed record CycleDayHeader(
     bool CanArchive);
 
 public sealed record CycleSubjectOption(Guid Id, string Name);
+
+public sealed record CycleTimeLayoutOption(Guid Id, string Name, int LessonCount)
+{
+    public string Description => $"{LessonCount} 个上课时间点";
+}
 
 public sealed record CycleScheduleCell(ClassInfo ClassInfo, IReadOnlyList<CycleSubjectOption> SubjectOptions);
 

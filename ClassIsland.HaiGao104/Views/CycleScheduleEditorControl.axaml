@@ -25,6 +25,26 @@
     <Border Grid.Row="1" Padding="10" Margin="0 0 0 6" CornerRadius="8"
             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
       <StackPanel Spacing="8">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+          <TextBlock Text="课程使用的时间表" VerticalAlignment="Center" />
+          <ComboBox Grid.Column="1"
+                    ItemsSource="{Binding TimeLayoutOptions}"
+                    SelectedItem="{Binding SelectedTimeLayout, Mode=TwoWay}"
+                    SelectionChanged="TimeLayout_OnSelectionChanged"
+                    MinWidth="240"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel>
+                  <TextBlock Text="{Binding Name}" />
+                  <TextBlock Text="{Binding Description}" FontSize="11" Opacity="0.68" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+        <TextBlock Text="直接选择“时间表”页中已有的时间表；不会复制、改名或删除。这里决定周一至周 N 课程格使用哪些上课时间点；不同班级批次仍可在海亮教育+设置中分别绑定时间表。"
+                   TextWrapping="Wrap" FontSize="12" Opacity="0.72" />
         <Grid ColumnDefinitions="Auto,130,Auto,Auto,*" ColumnSpacing="8">
           <TextBlock Text="今天是" VerticalAlignment="Center" />
           <ComboBox Grid.Column="1"
@@ -141,7 +161,7 @@
       <Border IsVisible="{Binding IsEmpty}" Padding="24" CornerRadius="8"
               Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
               HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
-        <TextBlock Text="托管时间表还没有课程时间点。请先到原编辑器的“时间表”页添加时间点，随后这里会自动出现周一、周二……周N 的课程格。"
+        <TextBlock Text="所选时间表还没有上课时间点。请先到“时间表”页添加，或在上方改选已有时间表；随后这里会自动出现周一、周二……周N 的课程格。"
                    TextWrapping="Wrap" TextAlignment="Center" />
       </Border>
     </Grid>
