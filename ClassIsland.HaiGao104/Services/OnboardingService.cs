@@ -6,24 +6,32 @@ using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Services;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ClassIsland.HaiGao104.Services;
 
 public sealed class OnboardingService(
     CycleSettingsService settings,
-    IUriNavigationService uriNavigationService) : IHostedService
+    IUriNavigationService uriNavigationService,
+    ILogger<OnboardingService> logger) : IHostedService
 {
     private bool _isShowing;
+    private CancellationTokenSource? _lifetimeCancellationSource;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         AppBase.Current.AppStarted += Current_OnAppStarted;
+        _lifetimeCancellationSource = new CancellationTokenSource();
+        _ = WaitForMainWindowAsync(_lifetimeCancellationSource.Token);
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         AppBase.Current.AppStarted -= Current_OnAppStarted;
+        _lifetimeCancellationSource?.Cancel();
+        _lifetimeCancellationSource?.Dispose();
+        _lifetimeCancellationSource = null;
         return Task.CompletedTask;
     }
 
@@ -74,14 +82,16 @@ public sealed class OnboardingService(
                 }
             };
 
-            var result = await new ContentDialog
+            var result = await PluginDialogHost.ShowAsync(new ContentDialog
             {
                 Title = "欢迎使用海亮教育+",
                 Content = content,
                 PrimaryButtonText = isFirstRun ? "我已了解，开始配置" : "打开设置",
                 CloseButtonText = isFirstRun ? "暂不启用" : "关闭",
-                DefaultButton = ContentDialogButton.Primary
-            }.ShowAsync(AppBase.Current.GetRootWindow());
+                DefaultButton = ContentDialogButton.None
+            });
+
+            logger.LogInformation("海亮教育+新手引导已关闭，结果：{Result}", result);
 
             if (isFirstRun)
             {
@@ -99,8 +109,54 @@ public sealed class OnboardingService(
         }
     }
 
-    private void Current_OnAppStarted(object? sender, EventArgs e) =>
-        Dispatcher.UIThread.Post(() => _ = ShowAsync(), DispatcherPriority.Background);
+    private void Current_OnAppStarted(object? sender, EventArgs e) => QueueShow();
+
+    private async Task WaitForMainWindowAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var isReady = await Dispatcher.UIThread.InvokeAsync(() =>
+                    AppBase.Current.DesktopLifetime?.Windows.Any(window =>
+                        window.GetType().FullName == "ClassIsland.MainWindow" &&
+                        window.PlatformImpl is not null) == true);
+                if (isReady)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                    if (!settings.HasCompletedOnboarding)
+                    {
+                        QueueShow();
+                    }
+                    return;
+                }
+
+                await Task.Delay(250, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "等待主窗口显示海亮教育+新手引导时发生错误。");
+        }
+    }
+
+    private void QueueShow() =>
+        Dispatcher.UIThread.Post(() => _ = ShowSafelyAsync(), DispatcherPriority.Background);
+
+    private async Task ShowSafelyAsync()
+    {
+        try
+        {
+            await ShowAsync();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "显示海亮教育+新手引导失败。");
+        }
+    }
 
     private static StackPanel CreateStep(string number, string title, string description) => new()
     {

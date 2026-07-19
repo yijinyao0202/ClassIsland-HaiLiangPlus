@@ -4,32 +4,83 @@ using ClassIsland.Core;
 using ClassIsland.Core.Abstractions.Services;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ClassIsland.HaiGao104.Services;
 
 public sealed class RestDayPromptService(
     CycleSettingsService settings,
     IScheduleControlBridge scheduleBridge,
-    IExactTimeService exactTimeService) : IHostedService
+    IExactTimeService exactTimeService,
+    ILogger<RestDayPromptService> logger) : IHostedService
 {
     private DateTime? _promptedDate;
+    private CancellationTokenSource? _lifetimeCancellationSource;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         AppBase.Current.AppStarted += Current_OnAppStarted;
+        _lifetimeCancellationSource = new CancellationTokenSource();
+        _ = WaitForMainWindowAsync(_lifetimeCancellationSource.Token);
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         AppBase.Current.AppStarted -= Current_OnAppStarted;
+        _lifetimeCancellationSource?.Cancel();
+        _lifetimeCancellationSource?.Dispose();
+        _lifetimeCancellationSource = null;
         return Task.CompletedTask;
     }
 
-    private void Current_OnAppStarted(object? sender, EventArgs e) =>
-        Dispatcher.UIThread.Post(ShowPromptIfNeeded, DispatcherPriority.Background);
+    private void Current_OnAppStarted(object? sender, EventArgs e) => QueuePrompt();
 
-    private async void ShowPromptIfNeeded()
+    private async Task WaitForMainWindowAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var isReady = await Dispatcher.UIThread.InvokeAsync(() =>
+                    AppBase.Current.DesktopLifetime?.Windows.Any(window =>
+                        window.GetType().FullName == "ClassIsland.MainWindow" &&
+                        window.PlatformImpl is not null) == true);
+                if (isReady)
+                {
+                    await Task.Delay(1000, cancellationToken);
+                    QueuePrompt();
+                    return;
+                }
+
+                await Task.Delay(250, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "等待主窗口显示海亮教育+休息日询问时发生错误。");
+        }
+    }
+
+    private void QueuePrompt() =>
+        Dispatcher.UIThread.Post(() => _ = ShowPromptSafelyAsync(), DispatcherPriority.Background);
+
+    private async Task ShowPromptSafelyAsync()
+    {
+        try
+        {
+            await ShowPromptIfNeededAsync();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "显示海亮教育+休息日询问失败。");
+        }
+    }
+
+    private async Task ShowPromptIfNeededAsync()
     {
         var now = exactTimeService.GetCurrentLocalDateTime();
         if (!settings.IsTakeoverEnabled ||
@@ -76,14 +127,16 @@ public sealed class RestDayPromptService(
                 }
             }
         };
-        var result = await new ContentDialog
+        var result = await PluginDialogHost.ShowAsync(new ContentDialog
         {
             Title = "今天是休息日",
             Content = content,
             PrimaryButtonText = "重复课表",
             CloseButtonText = "忽略，保持休息",
-            DefaultButton = ContentDialogButton.Primary
-        }.ShowAsync(AppBase.Current.GetRootWindow());
+            DefaultButton = ContentDialogButton.None
+        });
+
+        logger.LogInformation("海亮教育+休息日询问已关闭，结果：{Result}", result);
 
         if (result == ContentDialogResult.Primary)
         {
